@@ -1,0 +1,24 @@
+# Caddy configuration for PeerJS Server
+# Add this to your beamcam.live Caddyfile
+
+beamcam.live {
+    # Your existing config...
+
+    # PeerJS Server proxy
+    reverse_proxy /peerjs/* localhost:9000 {
+        # WebSocket support (automatic in Caddy)
+
+        # Headers for proxied requests
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+
+        # Long timeouts for WebRTC signaling
+        transport http {
+            read_timeout 7d
+            write_timeout 7d
+            dial_timeout 30s
+        }
+    }
+}

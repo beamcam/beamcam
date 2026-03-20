@@ -1,0 +1,12 @@
+{
+  "name": "beamcam-peerjs-server",
+  "version": "1.0.0",
+  "description": "PeerJS server for BeamCam",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "peer": "^1.1.0-rc.2"
+  }
+}

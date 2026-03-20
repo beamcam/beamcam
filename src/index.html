@@ -1,0 +1,135 @@
+<div class="app-container">
+	<!-- Header -->
+	<header class="app-header">
+		<div class="logo">
+			<i data-lucide="camera"></i>
+			<span>WebCam</span>
+		</div>
+		<div id="status-badge" class="status-badge disconnected">Disconnected</div>
+	</header>
+
+	<!-- Main Content Area -->
+	<main class="main-content">
+
+		<!-- View 1: Mode Selection -->
+		<section id="selection-view" class="view active">
+			<div class="glass-card">
+				<h1>Choose your mode</h1>
+				<p class="subtitle">Select how you want to use this device</p>
+
+				<div class="mode-buttons">
+					<button id="btn-broadcaster" class="primary-btn">
+						<i data-lucide="smartphone"></i>
+						<div class="btn-text">
+							<strong>Phone Camera</strong>
+							<span>Use this device as a webcam</span>
+						</div>
+					</button>
+
+					<button id="btn-viewer" class="secondary-btn">
+						<i data-lucide="monitor"></i>
+						<div class="btn-text">
+							<strong>Desktop Viewer</strong>
+							<span>View camera from another device</span>
+						</div>
+					</button>
+
+					<button id="btn-local" class="secondary-btn" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3);">
+						<i data-lucide="video"></i>
+						<div class="btn-text">
+							<strong>Local Recorder</strong>
+							<span>Record camera or screen locally</span>
+						</div>
+					</button>
+				</div>
+			</div>
+		</section>
+
+		<!-- View 2: Broadcaster (Phone) -->
+		<section id="broadcaster-view" class="view">
+			<div class="video-container">
+				<video id="local-video" autoplay playsinline muted></video>
+				<div class="video-overlay">
+					<div class="pairing-info glass-panel">
+						<span>Scan or Share:</span>
+						<div id="qrcode-container" style="display: inline-block; margin: 10px 0; padding: 8px; background: white; border-radius: 8px;"></div>
+						<h2 id="pairing-code" class="code-display">Generating...</h2>
+						<button id="btn-copy-code" class="icon-btn" title="Copy Link"><i data-lucide="copy"></i></button>
+					</div>
+				</div>
+			</div>
+			<div class="controls-bar glass-panel">
+				<button id="btn-toggle-camera" class="control-btn active"><i data-lucide="video"></i></button>
+				<button id="btn-switch-camera" class="control-btn"><i data-lucide="switch-camera"></i></button>
+				<button id="btn-stop-broadcast" class="control-btn danger"><i data-lucide="phone-off"></i></button>
+			</div>
+		</section>
+
+		<!-- View 3: Viewer (Desktop) -->
+		<section id="viewer-view" class="view">
+			<div class="connect-prompt glass-card">
+				<h2>Connect to Camera</h2>
+				<p>Enter the pairing code displayed on your phone.</p>
+				<div class="input-group">
+					<input type="text" id="input-peer-id" placeholder="e.g. cam-12345" autocomplete="off" spellcheck="false">
+					<button id="btn-connect" class="primary-btn">Connect</button>
+				</div>
+			</div>
+
+			<div class="video-container hidden" id="remote-video-container">
+				<video id="remote-video" autoplay playsinline muted></video>
+				<div class="video-overlay">
+					<div class="glass-panel" style="padding: 12px 20px; margin: 16px; display: inline-flex; align-items: center; gap: 12px;">
+						<i data-lucide="volume-x" style="color: #ef4444;"></i>
+						<span style="font-size: 14px;">Click unmute to hear audio</span>
+						<button id="btn-unmute-hint" class="primary-btn" style="padding: 8px 16px; font-size: 14px;">Unmute</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="controls-bar glass-panel hidden" id="viewer-controls">
+				<button id="btn-toggle-audio" class="control-btn" title="Unmute Audio"><i data-lucide="volume-x"></i></button>
+				<button id="btn-fullscreen" class="control-btn"><i data-lucide="maximize"></i></button>
+				<button id="btn-stop-viewing" class="control-btn danger"><i data-lucide="phone-off"></i></button>
+			</div>
+		</section>
+
+		<!-- View 4: Local Recorder -->
+		<section id="local-view" class="view">
+			<div class="video-container">
+				<video id="recorder-video" autoplay playsinline muted></video>
+				<div class="video-overlay hidden" id="recording-indicator">
+					<div class="pairing-info glass-panel">
+						<div class="status-badge" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1);">
+							<span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--danger); display: inline-block; margin-right: 8px; box-shadow: 0 0 8px var(--danger);"></span>
+							Recording... <span id="recording-time" style="font-family: monospace; font-size: 1.1em; margin-left: 8px;">00:00</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Setup Controls -->
+			<div class="controls-bar glass-panel" id="local-setup-controls">
+				<button id="btn-local-camera" class="control-btn"><i data-lucide="camera"></i></button>
+				<button id="btn-local-screen" class="control-btn"><i data-lucide="monitor-up"></i></button>
+				<button id="btn-local-start-record" class="control-btn danger hidden"><i data-lucide="circle-dot"></i></button>
+				<button id="btn-local-close" class="control-btn"><i data-lucide="x"></i></button>
+			</div>
+
+			<!-- Active Recording Controls -->
+			<div class="controls-bar glass-panel hidden" id="local-recording-controls">
+				<button id="btn-local-stop-record" class="control-btn active"><i data-lucide="square"></i></button>
+			</div>
+
+			<!-- Playback Controls -->
+			<div class="controls-bar glass-panel hidden" id="local-playback-controls">
+				<button id="btn-local-download" class="control-btn active" style="background: var(--success);"><i data-lucide="download"></i></button>
+				<button id="btn-local-discard" class="control-btn danger"><i data-lucide="trash-2"></i></button>
+			</div>
+		</section>
+
+	</main>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toast-container"></div>
