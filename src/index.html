@@ -55,12 +55,37 @@
 						<div id="qrcode-container" style="display: inline-block; margin: 10px 0; padding: 8px; background: white; border-radius: 8px;"></div>
 						<h2 id="pairing-code" class="code-display">Generating...</h2>
 						<button id="btn-copy-code" class="icon-btn" title="Copy Link"><i data-lucide="copy"></i></button>
+
+						<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 13px;">
+							<div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+								<label for="bitrate-select" style="flex-shrink: 0;">Bitrate:</label>
+								<select id="bitrate-select" style="flex: 1; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.3);">
+									<option value="500">500 kbps</option>
+									<option value="1000">1 Mbps</option>
+									<option value="2000" selected>2 Mbps</option>
+									<option value="3000">3 Mbps</option>
+									<option value="5000">5 Mbps</option>
+								</select>
+							</div>
+							<div style="display: flex; gap: 12px; align-items: center;">
+								<label for="framerate-select" style="flex-shrink: 0;">FPS:</label>
+								<select id="framerate-select" style="flex: 1; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.3);">
+									<option value="15">15 fps</option>
+									<option value="24">24 fps</option>
+									<option value="30" selected>30 fps</option>
+									<option value="60">60 fps</option>
+								</select>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 			<div class="controls-bar glass-panel">
 				<button id="btn-toggle-camera" class="control-btn active"><i data-lucide="video"></i></button>
+				<button id="btn-toggle-mic" class="control-btn active" title="Toggle Microphone"><i data-lucide="mic"></i></button>
 				<button id="btn-switch-camera" class="control-btn"><i data-lucide="switch-camera"></i></button>
+				<button id="btn-lock-focus" class="control-btn hidden" title="Lock Focus"><i data-lucide="focus"></i></button>
+				<button id="btn-lock-exposure" class="control-btn hidden" title="Lock Exposure"><i data-lucide="sun"></i></button>
 				<button id="btn-stop-broadcast" class="control-btn danger"><i data-lucide="phone-off"></i></button>
 			</div>
 		</section>

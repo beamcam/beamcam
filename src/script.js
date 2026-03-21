@@ -15,6 +15,10 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let recordingStartTime = 0;
 let recordingInterval = null;
+let focusLocked = false;
+let exposureLocked = false;
+let currentBitrate = 2000; // kbps
+let currentFramerate = 30;
 
 // DOM Elements
 const views = {
@@ -183,6 +187,16 @@ async function startBroadcaster() {
 
 		updateStatus("Connecting to Viewer...");
 
+		// Apply bitrate to the outgoing video sender once connection is ready
+		setTimeout(() => {
+			if (call && call.peerConnection) {
+				const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === "video");
+				if (sender) {
+					applyBitrateToSender(sender);
+				}
+			}
+		}, 1000);
+
 		// Poll WebRTC stats to detect when connection is established
 		const checkConnectionStats = async () => {
 			if (!call || !call.peerConnection) {
@@ -240,7 +254,8 @@ async function initCamera() {
 			video: {
 				facingMode: currentFacingMode,
 				width: { ideal: 1280 },
-				height: { ideal: 720 }
+				height: { ideal: 720 },
+				frameRate: { ideal: currentFramerate }
 			},
 			audio: true
 		};
@@ -248,20 +263,44 @@ async function initCamera() {
 		localStream = await navigator.mediaDevices.getUserMedia(constraints);
 		UI.localVideo.srcObject = localStream;
 
+		// Apply bitrate constraint to video track
+		const videoTrack = localStream.getVideoTracks()[0];
+		if (videoTrack) {
+			try {
+				await videoTrack.applyConstraints({
+					advanced: [{ frameRate: currentFramerate }]
+				});
+			} catch (e) {
+				log.debug("Could not apply framerate constraint:", e);
+			}
+		}
+
 		// If we are currently in a call, replace the video track
 		if (currentCall) {
-			const videoTrack = localStream.getVideoTracks()[0];
 			const sender = currentCall.peerConnection
 				.getSenders()
-				.find((s) => s.track.kind === videoTrack.kind);
+				.find((s) => s.track && s.track.kind === "video");
 			if (sender) {
-				sender.replaceTrack(videoTrack);
+				await sender.replaceTrack(videoTrack);
+				// Apply encoding parameters for bitrate
+				applyBitrateToSender(sender);
 			}
 		}
 	} catch (err) {
 		log.error("Camera error:", err.name);
 		showToast("Error accessing camera. Please ensure permissions are granted.");
 	}
+}
+
+function applyBitrateToSender(sender) {
+	const parameters = sender.getParameters();
+	if (!parameters.encodings) {
+		parameters.encodings = [{}];
+	}
+	parameters.encodings[0].maxBitrate = currentBitrate * 1000; // Convert kbps to bps
+	sender.setParameters(parameters).catch((err) => {
+		log.error("Failed to set bitrate:", err);
+	});
 }
 
 function stopBroadcaster() {
@@ -585,6 +624,41 @@ document.getElementById("btn-copy-code").addEventListener("click", () => {
 	showToast("Link copied to clipboard!");
 });
 
+document.getElementById("bitrate-select").addEventListener("change", (e) => {
+	currentBitrate = parseInt(e.target.value);
+	log.debug("Bitrate changed to:", currentBitrate, "kbps");
+
+	// Apply to active call if exists
+	if (currentCall && currentCall.peerConnection) {
+		const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === "video");
+		if (sender) {
+			applyBitrateToSender(sender);
+			showToast(`Bitrate updated to ${currentBitrate >= 1000 ? currentBitrate/1000 + ' Mbps' : currentBitrate + ' kbps'}`);
+		}
+	}
+});
+
+document.getElementById("framerate-select").addEventListener("change", async (e) => {
+	currentFramerate = parseInt(e.target.value);
+	log.debug("Framerate changed to:", currentFramerate, "fps");
+
+	// Apply to local stream
+	if (localStream) {
+		const videoTrack = localStream.getVideoTracks()[0];
+		if (videoTrack) {
+			try {
+				await videoTrack.applyConstraints({
+					frameRate: { ideal: currentFramerate }
+				});
+				showToast(`Framerate updated to ${currentFramerate} fps`);
+			} catch (err) {
+				log.error("Failed to apply framerate:", err);
+				showToast("Failed to update framerate");
+			}
+		}
+	}
+});
+
 document.getElementById("btn-toggle-camera").addEventListener("click", (e) => {
 	const btn = e.currentTarget;
 	if (localStream) {
@@ -596,10 +670,78 @@ document.getElementById("btn-toggle-camera").addEventListener("click", (e) => {
 	}
 });
 
+document.getElementById("btn-toggle-mic").addEventListener("click", (e) => {
+	const btn = e.currentTarget;
+	if (localStream) {
+		const audioTrack = localStream.getAudioTracks()[0];
+		if (audioTrack) {
+			audioTrack.enabled = !audioTrack.enabled;
+			btn.classList.toggle("active");
+			const icon = btn.querySelector("i");
+			icon.setAttribute("data-lucide", audioTrack.enabled ? "mic" : "mic-off");
+			lucide.createIcons();
+		}
+	}
+});
+
 document.getElementById("btn-switch-camera").addEventListener("click", () => {
 	currentFacingMode =
 		currentFacingMode === "environment" ? "user" : "environment";
 	initCamera();
+});
+
+document.getElementById("btn-lock-focus").addEventListener("click", async (e) => {
+	const btn = e.currentTarget;
+	if (!localStream) return;
+
+	const videoTrack = localStream.getVideoTracks()[0];
+	if (!videoTrack) return;
+
+	try {
+		const capabilities = videoTrack.getCapabilities();
+		if (!capabilities.focusMode || !capabilities.focusMode.includes("manual")) {
+			showToast("Focus lock not supported on this device");
+			return;
+		}
+
+		focusLocked = !focusLocked;
+		await videoTrack.applyConstraints({
+			advanced: [{ focusMode: focusLocked ? "manual" : "continuous" }]
+		});
+
+		btn.classList.toggle("active", focusLocked);
+		showToast(focusLocked ? "Focus locked" : "Focus unlocked");
+	} catch (err) {
+		log.error("Focus lock error:", err);
+		showToast("Failed to lock focus");
+	}
+});
+
+document.getElementById("btn-lock-exposure").addEventListener("click", async (e) => {
+	const btn = e.currentTarget;
+	if (!localStream) return;
+
+	const videoTrack = localStream.getVideoTracks()[0];
+	if (!videoTrack) return;
+
+	try {
+		const capabilities = videoTrack.getCapabilities();
+		if (!capabilities.exposureMode || !capabilities.exposureMode.includes("manual")) {
+			showToast("Exposure lock not supported on this device");
+			return;
+		}
+
+		exposureLocked = !exposureLocked;
+		await videoTrack.applyConstraints({
+			advanced: [{ exposureMode: exposureLocked ? "manual" : "continuous" }]
+		});
+
+		btn.classList.toggle("active", exposureLocked);
+		showToast(exposureLocked ? "Exposure locked" : "Exposure unlocked");
+	} catch (err) {
+		log.error("Exposure lock error:", err);
+		showToast("Failed to lock exposure");
+	}
 });
 
 document
