@@ -23,17 +23,23 @@ echo "📦 Copying assets..."
 cp "$SRC_DIR/script.js" "$DIST_DIR/script.js"
 cp "$SRC_DIR/style.css" "$DIST_DIR/style.css"
 cp "$SRC_DIR/sw.js" "$DIST_DIR/sw.js"
+cp "$SRC_DIR/site.css" "$DIST_DIR/site.css"
 
-# Build complete HTML file
-echo "📄 Building index.html..."
+# Static pages: landing (index.html) and technical page (tech.html), copied as-is
+echo "📄 Copying pages..."
+cp "$SRC_DIR/pages/index.html" "$DIST_DIR/index.html"
+cp "$SRC_DIR/pages/tech.html" "$DIST_DIR/tech.html"
 
-cat > "$DIST_DIR/index.html" << 'EOF'
+# Build the app page: wrap the src/app.html fragment
+echo "📄 Building app.html..."
+
+cat > "$DIST_DIR/app.html" << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BeamCam</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>BeamCam · App</title>
     <meta name="description" content="Use your phone as a webcam, view remote cameras, or record locally. Serverless PWA with peer-to-peer video streaming.">
 
     <!-- PWA Meta Tags -->
@@ -68,10 +74,10 @@ cat > "$DIST_DIR/index.html" << 'EOF'
 EOF
 
 # Append the HTML content from src
-cat "$SRC_DIR/index.html" >> "$DIST_DIR/index.html"
+cat "$SRC_DIR/app.html" >> "$DIST_DIR/app.html"
 
 # Close HTML tags
-cat >> "$DIST_DIR/index.html" << 'EOF'
+cat >> "$DIST_DIR/app.html" << 'EOF'
 
 <!-- Application Script -->
 <script src="./script.js"></script>
@@ -87,7 +93,7 @@ cat > "$DIST_DIR/manifest.json" << 'EOF'
   "name": "BeamCam",
   "short_name": "BeamCam",
   "description": "Use your phone as a webcam, view remote cameras, or record locally",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#6366f1",
@@ -109,7 +115,10 @@ echo ""
 echo "✅ Build complete!"
 echo ""
 echo "📂 Output files:"
-echo "   - $DIST_DIR/index.html"
+echo "   - $DIST_DIR/index.html (landing)"
+echo "   - $DIST_DIR/app.html"
+echo "   - $DIST_DIR/tech.html"
+echo "   - $DIST_DIR/site.css"
 echo "   - $DIST_DIR/script.js"
 echo "   - $DIST_DIR/style.css"
 echo "   - $DIST_DIR/manifest.json"

@@ -12,6 +12,8 @@ A Progressive Web App (PWA) that transforms your phone into a webcam, enables re
 
 ## Features
 
+- 👶 **Baby monitor / walkie-talkie** - Live video + sound, and the viewer can hold to talk back
+- 📶 **Adaptive bitrate** - Auto mode settles on what the link sustained over the last 3 minutes
 - 📱 **Phone Camera Mode** - Use your mobile device as a wireless webcam
 - 🖥️ **Desktop Viewer Mode** - View camera feeds from remote devices
 - 🎥 **Local Recorder Mode** - Record from camera or screen with audio
@@ -82,7 +84,7 @@ No build tools required for basic development:
 # Edit source files
 vim src/script.js
 vim src/style.css
-vim src/index.html
+vim src/app.html
 
 # Build production version
 bash bin/build.sh
@@ -104,12 +106,16 @@ See `server/` directory for server setup scripts.
 ```
 beamcam/
 ├── src/
-│   ├── index.html      # HTML fragment (no <html>/<head>/<body> tags)
+│   ├── app.html        # App HTML fragment (no <html>/<head>/<body> tags)
+│   ├── pages/          # Landing (index.html) + technical page (tech.html)
+│   ├── site.css        # Styles for the landing + tech pages
 │   ├── script.js       # Application logic
 │   └── style.css       # Styles with CSS variables
 │   └── sw.js           # Service Worker for PWA
 ├── dist/
-│   ├── index.html      # Complete production HTML
+│   ├── index.html      # Landing page
+│   ├── app.html        # Complete app HTML
+│   ├── tech.html       # Technical page
 │   ├── script.js       # Production JavaScript
 │   └── style.css       # Production CSS
 ├── bin/

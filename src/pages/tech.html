@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Under the hood · BeamCam</title>
+	<meta name="description" content="How BeamCam is built: WebRTC peer-to-peer video, PeerJS signaling, STUN/TURN NAT traversal, adaptive bitrate, push-to-talk, MediaRecorder. No framework, no build step, no third parties.">
+	<meta name="theme-color" content="#050505">
+	<link rel="icon" href="./favicon.ico">
+	<link rel="stylesheet" href="./site.css">
+</head>
+<body>
+
+<nav class="nav">
+	<div class="wrap">
+		<a class="brand" href="./">
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+			BeamCam
+		</a>
+		<div class="nav-links">
+			<a class="hide-sm" href="./#uses">Uses</a>
+			<a class="hide-sm" href="./tech.html" aria-current="page">Under the hood</a>
+			<a class="hide-sm" href="https://github.com/beamcam/beamcam">GitHub</a>
+			<a class="btn primary small" href="./app.html">Open the app</a>
+		</div>
+	</div>
+</nav>
+
+<div class="wrap doc">
+	<aside class="toc">
+		<p>On this page</p>
+		<a href="#overview">Overview</a>
+		<a href="#architecture">Architecture</a>
+		<a href="#handshake">The handshake</a>
+		<a href="#nat">NAT traversal</a>
+		<a href="#talk">Push-to-talk</a>
+		<a href="#adaptive">Adaptive bitrate</a>
+		<a href="#filters">Image filters</a>
+		<a href="#recorder">Local recorder</a>
+		<a href="#privacy">Privacy model</a>
+		<a href="#code">Code map</a>
+		<a href="#selfhost">Self-hosting</a>
+		<a href="#limits">Known limits</a>
+		<a href="#source">Source</a>
+	</aside>
+
+	<main class="prose">
+		<section id="overview">
+			<p class="kicker">// under the hood</p>
+			<h1>No framework. No build step. No bullshit.</h1>
+			<p class="lede">
+				BeamCam is about a thousand lines of plain JavaScript on top of standard browser APIs.
+				The browser already ships a camera stack, a video codec, an encrypted real-time transport and a
+				congestion controller. The job is to wire them together and stay out of their way.
+			</p>
+			<div class="table-wrap">
+				<table>
+					<tr><th>Layer</th><th>What</th><th>Why</th></tr>
+					<tr><td>Capture</td><td><code>getUserMedia</code>, <code>getDisplayMedia</code></td><td>Camera, mic, screen. Native, hardware-accelerated.</td></tr>
+					<tr><td>Transport</td><td>WebRTC via <a href="https://peerjs.com/">PeerJS</a> 1.5.4</td><td>Peer-to-peer, DTLS-SRTP encrypted, built-in congestion control.</td></tr>
+					<tr><td>Signaling</td><td><a href="https://github.com/peers/peerjs-server">peerjs-server</a> (Node) behind Caddy</td><td>Swaps SDP and ICE candidates over a WebSocket. Never sees media.</td></tr>
+					<tr><td>NAT traversal</td><td>coturn on <code>:3478</code> UDP/TCP</td><td>STUN to find a public address, TURN as a last-resort relay.</td></tr>
+					<tr><td>Recording</td><td><code>MediaRecorder</code></td><td>WebM/VP9 in memory, exported as a Blob.</td></tr>
+					<tr><td>UI</td><td>HTML + CSS, <a href="https://lucide.dev/">Lucide</a> icons, qrcode.js</td><td>All self-hosted. No CDN, no fonts from elsewhere.</td></tr>
+				</table>
+			</div>
+		</section>
+
+		<section id="architecture">
+			<h2>Architecture</h2>
+			<p>
+				There are two planes. The <strong>signaling plane</strong> is tiny: a few kilobytes of JSON
+				so two browsers can introduce themselves. The <strong>media plane</strong> carries the
+				megabits, and it doesn't pass through our server.
+			</p>
+			<div class="diagram">
+				<svg viewBox="0 0 760 330" role="img" aria-label="Architecture: two devices signal through beamcam.live, then exchange media directly">
+					<defs>
+						<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#818cf8"/></marker>
+						<marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#10b981"/></marker>
+						<marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9a9aa8"/></marker>
+					</defs>
+					<g font-family="ui-monospace,monospace" font-size="12">
+						<!-- server box -->
+						<rect x="230" y="14" width="300" height="118" rx="12" fill="#121218" stroke="#2c2c38"/>
+						<text x="380" y="36" text-anchor="middle" fill="#f4f4f6" font-weight="700" font-size="13">beamcam.live</text>
+						<rect x="246" y="48" width="130" height="68" rx="8" fill="#0b0b10" stroke="#3a3a48"/>
+						<text x="311" y="72" text-anchor="middle" fill="#c7d2fe">Caddy :443</text>
+						<text x="311" y="90" text-anchor="middle" fill="#9a9aa8" font-size="10.5">static files</text>
+						<text x="311" y="105" text-anchor="middle" fill="#9a9aa8" font-size="10.5">/peerjs → :9000</text>
+						<rect x="388" y="48" width="130" height="68" rx="8" fill="#0b0b10" stroke="#3a3a48"/>
+						<text x="453" y="72" text-anchor="middle" fill="#a7f3d0">coturn :3478</text>
+						<text x="453" y="90" text-anchor="middle" fill="#9a9aa8" font-size="10.5">STUN: public IP</text>
+						<text x="453" y="105" text-anchor="middle" fill="#9a9aa8" font-size="10.5">TURN: relay</text>
+
+						<!-- devices -->
+						<rect x="20" y="200" width="200" height="110" rx="14" fill="#121218" stroke="#6366f1"/>
+						<text x="120" y="228" text-anchor="middle" fill="#f4f4f6" font-weight="700" font-size="13">Camera phone</text>
+						<text x="120" y="250" text-anchor="middle" fill="#9a9aa8" font-size="11">getUserMedia → stream</text>
+						<text x="120" y="268" text-anchor="middle" fill="#9a9aa8" font-size="11">peer id: cam-xxxxxxxx</text>
+						<text x="120" y="286" text-anchor="middle" fill="#9a9aa8" font-size="11">answers calls</text>
+
+						<rect x="540" y="200" width="200" height="110" rx="14" fill="#121218" stroke="#10b981"/>
+						<text x="640" y="228" text-anchor="middle" fill="#f4f4f6" font-weight="700" font-size="13">Viewer</text>
+						<text x="640" y="250" text-anchor="middle" fill="#9a9aa8" font-size="11">random peer id</text>
+						<text x="640" y="268" text-anchor="middle" fill="#9a9aa8" font-size="11">calls cam-xxxxxxxx</text>
+						<text x="640" y="286" text-anchor="middle" fill="#9a9aa8" font-size="11">plays remote stream</text>
+
+						<!-- signaling -->
+						<path d="M110 198 L 290 120" stroke="#818cf8" stroke-dasharray="5 5" fill="none" marker-end="url(#ah)" marker-start="url(#ah)"/>
+						<path d="M650 198 L 340 120" stroke="#818cf8" stroke-dasharray="5 5" fill="none" marker-end="url(#ah)" marker-start="url(#ah)"/>
+						<text x="150" y="150" fill="#818cf8" font-size="11">WSS: SDP + ICE</text>
+						<text x="548" y="150" fill="#818cf8" font-size="11">WSS: SDP + ICE</text>
+
+						<!-- stun probes -->
+						<path d="M180 198 L 420 120" stroke="#9a9aa8" stroke-dasharray="2 4" fill="none" marker-end="url(#am)"/>
+						<path d="M590 198 L 480 120" stroke="#9a9aa8" stroke-dasharray="2 4" fill="none" marker-end="url(#am)"/>
+
+						<!-- media -->
+						<path d="M224 255 L 536 255" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#ag)" marker-start="url(#ag)"/>
+						<text x="380" y="244" text-anchor="middle" fill="#10b981" font-weight="700">media: P2P, DTLS-SRTP</text>
+						<text x="380" y="276" text-anchor="middle" fill="#9a9aa8" font-size="11">video + audio →  ·  ← talk-back audio</text>
+					</g>
+				</svg>
+			</div>
+			<p>
+				The site itself is static: <code>index.html</code> (this landing page), <code>app.html</code>,
+				<code>tech.html</code>, one script and two stylesheets. Caddy serves the files and proxies
+				<code>/peerjs/*</code> (HTTP + WebSocket) to the PeerJS server on <code>127.0.0.1:9000</code>.
+				The PeerJS server runs with <code>allow_discovery: false</code>, so nobody can list the cameras
+				that are online.
+			</p>
+		</section>
+
+		<section id="handshake">
+			<h2>The handshake, step by step</h2>
+			<ol>
+				<li><strong>Camera phone</strong> generates a peer id from <code>crypto.getRandomValues</code>
+					(8 random bytes, rendered as <code>cam-</code> + 12 base-36 characters), registers it
+					with the signaling server and shows it as text and as a QR code of
+					<code>https://beamcam.live/app.html#cam-…</code>.</li>
+				<li><strong>Viewer</strong> opens with an anonymous id. A <code>#cam-…</code> hash in the URL
+					(from the QR code) is queued and dialled as soon as the peer is open, so you don't race a timer.</li>
+				<li>The viewer <strong>calls</strong> the camera with a placeholder stream: a 1 fps black
+					canvas plus a silent <code>AudioContext</code> track. This is on purpose. The SDP offer
+					then contains both an audio and a video m-line, so the answer can carry real media
+					in both directions without renegotiation.</li>
+				<li>The camera <strong>auto-answers</strong> with its real <code>MediaStream</code>
+					(720p ideal, chosen fps, mic on).</li>
+				<li><strong>ICE</strong> runs: host candidates (LAN), server-reflexive (STUN), relay (TURN).
+					The best working pair wins. The camera polls <code>iceConnectionState</code> to report
+					"Connected" in the UI.</li>
+				<li>From here, the server is out of the loop until someone hangs up.</li>
+			</ol>
+<pre><span class="c">// viewer: offer audio + video even though we have nothing to send yet</span>
+<span class="k">const</span> canvasStream = canvas.captureStream(<span class="s">1</span>);
+<span class="k">const</span> silence = <span class="k">new</span> AudioContext().createMediaStreamDestination();
+<span class="k">const</span> dummy = <span class="k">new</span> MediaStream([
+  ...canvasStream.getVideoTracks(), ...silence.stream.getAudioTracks()
+]);
+currentCall = peer.call(targetId, dummy);</pre>
+		</section>
+
+		<section id="nat">
+			<h2>NAT traversal: same Wi-Fi, mesh, 4G</h2>
+			<p>
+				On the <strong>same network</strong> (including Wi-Fi mesh systems, which are a single LAN
+				behind several access points), the host candidates connect directly. Your video travels over
+				your local network and never reaches the internet. Only the initial handshake does.
+			</p>
+			<p>
+				Across networks, each device asks the STUN server for its public address and the two punch
+				through their NATs. When that fails (symmetric NAT, corporate firewall), TURN relays the
+				<em>encrypted</em> packets. Both peers use <code>iceTransportPolicy: "all"</code>; forcing
+				<code>"relay"</code> was tried and broke connections that would have worked directly.
+			</p>
+			<div class="callout"><p>
+				<strong>Why not fully offline on a LAN?</strong> Two browsers can't find each other without
+				a rendezvous point. Browsers have no mDNS/Bonjour API for web pages. A local signaling server
+				would do it; see <a href="#selfhost">self-hosting</a>.
+			</p></div>
+		</section>
+
+		<section id="talk">
+			<h2>Push-to-talk</h2>
+			<p>
+				Because of the placeholder stream, the viewer already has a negotiated audio sender carrying
+				silence. Talking back is one call:
+			</p>
+<pre><span class="k">const</span> sender = pc.getSenders().find(s => s.track?.kind === <span class="s">"audio"</span>);
+<span class="k">const</span> mic = (<span class="k">await</span> getUserMedia({ audio: <span class="k">true</span> })).getAudioTracks()[<span class="s">0</span>];
+<span class="k">await</span> sender.replaceTrack(mic);   <span class="c">// once; no renegotiation</span>
+mic.enabled = pressed;              <span class="c">// on every press / release</span></pre>
+			<p>
+				The mic is requested on the first press and kept. After that, press and release just flip
+				<code>track.enabled</code>, so there's no delay and no permission prompt mid-sentence. On the camera
+				side, the incoming stream plays through a hidden <code>&lt;audio&gt;</code> element.
+				The browser's acoustic echo cancellation stops the phone's own speaker from feeding back
+				into its mic. The button uses pointer capture (works with mouse, touch and pen), and Space
+				works too on a keyboard.
+			</p>
+		</section>
+
+		<section id="adaptive">
+			<h2>Adaptive bitrate: measured, not guessed</h2>
+			<p>
+				WebRTC's own congestion control (GCC) already reacts within seconds. It's good at reacting
+				and bad at committing: on a flaky link it climbs, gets burned and drops, over and over.
+				BeamCam's <strong>Auto</strong> mode sits on top and picks a ceiling the link has
+				<em>sustained</em>, computed locally on the camera phone:
+			</p>
+			<ul>
+				<li>Every <strong>2 s</strong>, read <code>getStats()</code>: <code>availableOutgoingBitrate</code>
+					from the nominated candidate pair, <code>fractionLost</code> and RTT from
+					<code>remote-inbound-rtp</code>. On Firefox, which has no bandwidth estimate, the actual send
+					rate from <code>outbound-rtp.bytesSent</code> is used instead.</li>
+				<li>Keep a sliding window of <strong>90 samples = 3 minutes</strong>.</li>
+				<li>Ignore the first 10 s: the estimator starts low and ramps up, and those samples would
+					drag the budget down for three minutes.</li>
+				<li>Budget = <strong>20th percentile</strong> of measured bandwidth. One good second
+					doesn't raise it; the link has to hold that speed most of the time.</li>
+				<li>Loss over the last 30 s above 2% / 5% cuts the budget by 15% / 30%.</li>
+				<li>Move along a ladder of levels, applied with <code>RTCRtpSender.setParameters()</code>:</li>
+			</ul>
+			<div class="table-wrap">
+				<table>
+					<tr><th>Level</th><th>maxBitrate</th><th>scaleResolutionDownBy</th><th>≈ Output from 720p</th></tr>
+					<tr><td>0</td><td>300 kbps</td><td>2</td><td>360p</td></tr>
+					<tr><td>1</td><td>600 kbps</td><td>2</td><td>360p</td></tr>
+					<tr><td>2</td><td>1 Mbps</td><td>1.5</td><td>480p</td></tr>
+					<tr><td>3</td><td>1.5 Mbps</td><td>1</td><td>720p (start level)</td></tr>
+					<tr><td>4</td><td>2.5 Mbps</td><td>1</td><td>720p</td></tr>
+					<tr><td>5</td><td>4 Mbps</td><td>1</td><td>720p, high detail</td></tr>
+				</table>
+			</div>
+			<p>
+				<strong>Hysteresis band:</strong> the bandwidth estimate tends to sit close to what's already
+				being sent, so "budget below the cap" alone would ratchet quality down forever. Instead it
+				<em>drops</em> only when the sustained budget falls under 90% of the current cap, going
+				straight to the highest level that fits in 85% of it. It <em>climbs</em> one level at a time,
+				only when the budget clears the next level by 25% and loss stays under 2%. Bad news is
+				acted on immediately; good news has to last before it counts.
+				Pick a fixed bitrate in the menu to turn all of this off.
+			</p>
+			<p>
+				What it does <em>not</em> touch: colour depth. Real-time video codecs (VP8/VP9/H.264) encode
+				8-bit 4:2:0. There is no "fewer colours" knob. The closest real lever is the
+				<a href="#filters">grayscale filter</a>, which empties the chroma planes.
+			</p>
+		</section>
+
+		<section id="filters">
+			<h2>Image filters: applied to what's sent</h2>
+			<p>
+				Brightness, contrast and grayscale change the stream the viewer receives, not just the local
+				preview. When any slider is off neutral, the camera track goes through a small pipeline:
+			</p>
+<pre>camera track → hidden &lt;video&gt; → &lt;canvas&gt; → canvas.captureStream() → RTCRtpSender.replaceTrack()</pre>
+			<ul>
+				<li><strong>Canvas 2D <code>ctx.filter</code></strong> (<code>grayscale() contrast() brightness()</code>)
+					where supported: Chrome, Edge, Firefox. It's GPU-backed.</li>
+				<li><strong>WebGL fragment shader</strong> fallback for browsers without <code>ctx.filter</code>:
+					luma mix, then contrast around mid-grey, then gain.</li>
+				<li>Drawn once per camera frame with <code>requestVideoFrameCallback</code>, falling back to
+					<code>requestAnimationFrame</code>.</li>
+				<li>Back at neutral values, the pipeline is torn down and the raw camera track is swapped back in,
+					so it costs nothing when unused.</li>
+			</ul>
+			<p>
+				Grayscale also saves bandwidth: flat chroma planes compress to almost nothing, so at the same
+				bitrate the encoder spends everything on luminance detail. Useful for a dark nursery at 500 kbps.
+			</p>
+		</section>
+
+		<section id="recorder">
+			<h2>Local recorder</h2>
+			<p>
+				Camera (<code>getUserMedia</code>, 1080p ideal) or screen (<code>getDisplayMedia</code>) with
+				audio goes into a <code>MediaRecorder</code>. VP9 is used when available, otherwise the
+				browser's default. Chunks are collected every 100 ms in memory, then assembled into a
+				<code>Blob</code> for playback and download. No network involved. Keep long recordings in
+				mind: everything lives in RAM until you download it.
+			</p>
+		</section>
+
+		<section id="privacy">
+			<h2>Privacy model</h2>
+			<ul>
+				<li><strong>Media is end-to-end encrypted</strong> by WebRTC (DTLS-SRTP, not optional).
+					A TURN relay only forwards ciphertext.</li>
+				<li><strong>No long-lived secrets in the browser.</strong> TURN credentials are minted per session by
+					the signaling server (<code>/peerjs/turn</code>): a username carrying an expiry timestamp and an
+					HMAC of it, valid 24 h. The coturn secret stays on the server.</li>
+				<li><strong>No accounts, no database.</strong> Peer ids are ephemeral and disappear when the
+					tab closes.</li>
+				<li><strong>No third-party requests.</strong> PeerJS, Lucide and qrcode.js are served from
+					beamcam.live. No CDN, analytics, fonts or pixels.</li>
+				<li><strong>Client logs off in production.</strong> Debug logging only runs on
+					<code>localhost</code>.</li>
+				<li><strong>The pairing code is a bearer token.</strong> It's random enough to be unguessable in practice,
+					and with discovery disabled the codes can't be listed. But whoever holds the code can watch,
+					so treat it like a key.</li>
+			</ul>
+		</section>
+
+		<section id="code">
+			<h2>Code map</h2>
+			<div class="table-wrap">
+				<table>
+					<tr><th>Path</th><th>Role</th></tr>
+					<tr><td><code>src/app.html</code></td><td>App markup (fragment; wrapped into <code>dist/app.html</code> by the build)</td></tr>
+					<tr><td><code>src/script.js</code></td><td>Everything: views, broadcaster, viewer, push-to-talk, adaptive bitrate, recorder, routing</td></tr>
+					<tr><td><code>src/style.css</code></td><td>App styles</td></tr>
+					<tr><td><code>src/pages/</code></td><td>Landing page and this page, plus <code>src/site.css</code></td></tr>
+					<tr><td><code>bin/build.sh</code></td><td>Assembles <code>dist/</code>: HTML wrapper, manifest, copies. That's the whole build.</td></tr>
+					<tr><td><code>server/</code></td><td>PeerJS server (<code>server.js</code>), systemd and coturn install scripts</td></tr>
+					<tr><td><code>config-samples/</code></td><td>Caddy and nginx reverse-proxy examples</td></tr>
+				</table>
+			</div>
+			<p>
+				The app is a single page with four views toggled by an <code>active</code> class. URL hashes
+				drive entry points: <code>#camera</code>, <code>#viewer</code>, <code>#record</code>, or
+				<code>#cam-…</code> to connect straight away.
+			</p>
+		</section>
+
+		<section id="selfhost">
+			<h2>Self-hosting</h2>
+			<p>Three pieces, all boring on purpose:</p>
+<pre><span class="c"># 1. signaling server (Node, port 9000, localhost only)</span>
+cd server &amp;&amp; ./install.sh &amp;&amp; sudo ./install-service.sh
+
+<span class="c"># 2. STUN/TURN</span>
+sudo ./install-coturn.sh          <span class="c"># opens 3478 udp/tcp</span>
+
+<span class="c"># 3. static files + proxy (Caddy does TLS for you)</span>
+bash bin/build.sh
+<span class="c"># Caddyfile</span>
+your.domain {
+    root * /path/to/dist
+    file_server
+    reverse_proxy /peerjs/* localhost:9000
+}</pre>
+			<p>
+				Then point the <code>host</code> and <code>iceServers</code> in <code>src/script.js</code> at your
+				domain. Run it on a box inside your house and you get a LAN-only setup: signaling,
+				media and TURN never leave your network.
+			</p>
+		</section>
+
+		<section id="limits">
+			<h2>Known limits</h2>
+			<ul>
+				<li><strong>Foreground only on mobile.</strong> iOS and Android suspend camera capture in
+					background tabs. The Screen Wake Lock API keeps the display on while streaming and is
+					re-acquired when the tab becomes visible again.</li>
+				<li><strong>No virtual camera.</strong> A web page can't register a system camera device.
+					Use OBS's Virtual Camera.</li>
+				<li><strong>Service Worker disabled.</strong> An earlier one intercepted the signaling
+					WebSocket. It's unregistered on load. No offline install for now.</li>
+				<li><strong>Single viewer by design.</strong> The camera answers each call, but UI, talk-back
+					and bitrate logic follow the latest call only.</li>
+			</ul>
+		</section>
+
+		<section id="source">
+			<h2>Source</h2>
+			<p>MIT licensed. Read it, fork it, send a patch. Short, clear patches get merged.</p>
+			<a class="gh-card" href="https://github.com/beamcam/beamcam">
+				<svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+				<div><b>beamcam/beamcam</b><span>github.com/beamcam/beamcam · MIT · © 2026 L3DLP</span></div>
+				<span class="arrow">→</span>
+			</a>
+		</section>
+	</main>
+</div>
+
+<footer>
+	<div class="wrap">
+		<a class="brand" href="./" style="font-size:1rem">BeamCam</a>
+		<a href="./app.html">App</a>
+		<a href="./">Home</a>
+		<a href="https://github.com/beamcam/beamcam">GitHub</a>
+		<span class="sp">MIT licence · © 2026 L3DLP</span>
+	</div>
+</footer>
+</body>
+</html>

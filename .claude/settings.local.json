@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./bin/build.sh)",
+      "Bash(chmod +x .tv/server/install.sh .tv/server/install-service.sh .tv/server/server.js)",
+      "Bash(curl -sL https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js -o peerjs.min.js)",
+      "Bash(curl -sL https://unpkg.com/lucide@latest/dist/umd/lucide.min.js -o lucide.min.js)",
+      "Bash(curl -s http://localhost:9000/peerjs/peerjs/peers)",
+      "Bash(curl -s http://localhost:9000/peerjs/peers)",
+      "Bash(curl -s http://localhost:9000/)",
+      "Bash(curl -i -N -H \"Connection: Upgrade\" -H \"Upgrade: websocket\" -H \"Sec-WebSocket-Version: 13\" -H \"Sec-WebSocket-Key: test123==\" \"http://localhost:9000/peerjs?key=peerjs&id=test-123&token=abc&version=1.5.4\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

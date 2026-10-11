@@ -25,6 +25,7 @@ body {
 	background-color: var(--bg-color);
 	color: var(--text);
 	height: 100vh;
+	height: 100dvh; /* follows the browser's collapsing toolbars on mobile */
 	overflow-x: hidden;
 	display: flex;
 	flex-direction: column;
@@ -66,6 +67,10 @@ h2 {
 	font-weight: 700;
 	font-size: 1.25rem;
 	letter-spacing: -0.025em;
+}
+a.logo {
+	color: inherit;
+	text-decoration: none;
 }
 .logo i {
 	color: var(--primary);
@@ -200,6 +205,7 @@ button {
 	width: 100%;
 	height: 100%;
 	max-height: 70vh;
+	max-height: 70dvh;
 	border-radius: var(--radius-lg);
 	overflow: hidden;
 	background: rgb(0, 0, 0);
@@ -256,7 +262,7 @@ video {
 }
 .controls-bar {
 	position: absolute;
-	bottom: 2rem;
+	bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
 	left: 50%;
 	transform: translateX(-50%);
 	display: flex;
@@ -283,6 +289,17 @@ video {
 .control-btn.active {
 	background: var(--text);
 	color: var(--bg-color);
+}
+.talk-btn {
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}
+.talk-btn.talking {
+	background: var(--success);
+	box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.25), 0 0 24px var(--success);
+	transform: scale(1.1);
 }
 .control-btn.danger {
 	background: var(--danger);
@@ -356,11 +373,32 @@ input[type="text"]:focus {
 	}
 	.video-container {
 		border-radius: 0px;
-		max-height: 100vh;
+		height: 100vh;
+		height: 100dvh;
+		max-height: none;
 		position: fixed;
 		top: 0px;
 		left: 0px;
 		z-index: 1;
+	}
+	.controls-bar {
+		bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+		gap: 0.5rem;
+		padding: 0.6rem;
+		max-width: calc(100vw - 16px);
+	}
+	.control-btn {
+		width: 48px;
+		height: 48px;
+		flex-shrink: 0;
+	}
+	.app-header {
+		padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.25rem 1rem;
+	}
+	#toast-container {
+		left: 1rem;
+		right: 1rem;
+		bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
 	}
 	.video-overlay,
 	.controls-bar {
@@ -373,5 +411,217 @@ input[type="text"]:focus {
 	.app-container {
 		max-width: 100%;
 		margin: 0px;
+	}
+}
+
+/* ---------- Broadcaster pairing card ---------- */
+.pairing-card {
+	position: absolute;
+	top: 1rem;
+	left: 1rem;
+	z-index: 5;
+	width: 280px;
+	max-height: calc(100% - 2rem);
+	overflow-y: auto;
+	padding: 1.1rem;
+	border-radius: var(--radius-md);
+	background: rgba(10, 10, 14, 0.72);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	animation: fadeIn 0.25s ease;
+}
+.pc-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+.pc-title {
+	font-weight: 700;
+	font-size: 1.05rem;
+}
+.pc-sub {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+}
+.pc-share {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.85rem;
+}
+.pc-qr {
+	background: #fff;
+	padding: 10px;
+	border-radius: 14px;
+	line-height: 0;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.pc-qr img,
+.pc-qr canvas {
+	width: 148px !important;
+	height: 148px !important;
+	display: block;
+}
+.pc-code-wrap {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.4rem;
+	width: 100%;
+}
+.pc-label {
+	font-size: 0.7rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.pc-code {
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 1.15rem;
+	letter-spacing: 0.04em;
+	color: #a5b4fc;
+	user-select: all;
+	word-break: break-all;
+	text-align: center;
+}
+.pc-copy,
+.pc-reset {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	padding: 0.5rem 0.9rem;
+	border-radius: 10px;
+	border: 1px solid var(--border-glass);
+	background: rgba(255, 255, 255, 0.06);
+	color: var(--text);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+.pc-copy:hover,
+.pc-reset:hover {
+	background: rgba(255, 255, 255, 0.12);
+}
+.pc-copy svg,
+.pc-settings summary svg {
+	width: 16px;
+	height: 16px;
+}
+.pc-settings {
+	border-top: 1px solid var(--border-glass);
+	padding-top: 0.85rem;
+}
+.pc-settings summary {
+	cursor: pointer;
+	list-style: none;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+.pc-settings summary::-webkit-details-marker {
+	display: none;
+}
+.pc-settings summary::after {
+	content: "+";
+	margin-left: auto;
+	font-family: ui-monospace, monospace;
+	font-size: 1.1rem;
+}
+.pc-settings[open] summary {
+	color: var(--text);
+	margin-bottom: 0.85rem;
+}
+.pc-settings[open] summary::after {
+	content: "−";
+}
+.pc-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.35rem;
+}
+.pc-grid label {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	margin-top: 0.4rem;
+}
+.pc-grid output {
+	font-family: ui-monospace, monospace;
+	color: var(--text);
+}
+.pc-grid select {
+	width: 100%;
+	padding: 0.5rem 0.6rem;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.4);
+	color: var(--text);
+	border: 1px solid var(--border-glass);
+	font: inherit;
+	font-size: 0.9rem;
+}
+.pc-grid input[type="range"] {
+	width: 100%;
+	accent-color: var(--primary);
+	height: 28px; /* comfortable touch target */
+}
+.pc-reset {
+	margin-top: 0.85rem;
+	width: 100%;
+}
+.pairing-pill {
+	position: absolute;
+	top: 1rem;
+	left: 1rem;
+	z-index: 5;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.55rem 0.9rem;
+	border-radius: 99px;
+	color: var(--text);
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 0.85rem;
+	background: rgba(10, 10, 14, 0.72);
+}
+.pairing-pill svg {
+	width: 16px;
+	height: 16px;
+}
+@media (max-width: 768px) {
+	.pairing-card,
+	.pairing-pill {
+		top: calc(4.5rem + env(safe-area-inset-top, 0px));
+		left: 0.75rem;
+	}
+	.pairing-card {
+		right: 0.75rem;
+		width: auto;
+		max-height: calc(100dvh - 4.5rem - 7rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+	}
+	.pc-share {
+		flex-direction: row;
+		align-items: center;
+	}
+	.pc-qr img,
+	.pc-qr canvas {
+		width: 132px !important;
+		height: 132px !important;
+	}
+	.pc-code-wrap {
+		align-items: flex-start;
+	}
+	.pc-code {
+		text-align: left;
+		font-size: 0.9rem;
+		white-space: nowrap;
+		word-break: normal;
 	}
 }

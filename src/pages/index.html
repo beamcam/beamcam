@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>BeamCam: your phone is the camera</title>
+	<meta name="description" content="Turn any phone into a live camera you can watch from any browser. Baby monitor, walkie-talkie, webcam, second angle, pet cam. No app, no account, no cloud. Peer-to-peer, open source.">
+	<meta name="theme-color" content="#050505">
+	<link rel="manifest" href="./manifest.json">
+	<link rel="icon" href="./favicon.ico">
+	<meta property="og:title" content="BeamCam: your phone is the camera">
+	<meta property="og:description" content="Scan a QR code and you're live. No app, no account, no cloud. Peer-to-peer video in the browser.">
+	<meta property="og:url" content="https://beamcam.live/">
+	<meta property="og:type" content="website">
+	<script>
+		// Old share links / QR codes pointed at /#cam-xxxx: hand them to the app
+		if (/^#cam-[a-z0-9]{4,16}$/i.test(location.hash)) location.replace("./app.html" + location.hash);
+	</script>
+	<link rel="stylesheet" href="./site.css">
+	<script src="./assets/lucide.min.js" defer></script>
+</head>
+<body>
+
+<nav class="nav">
+	<div class="wrap">
+		<a class="brand" href="./">
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+			BeamCam
+		</a>
+		<div class="nav-links">
+			<a class="hide-sm" href="#uses">Uses</a>
+			<a class="hide-sm" href="#how">How it works</a>
+			<a class="hide-sm" href="./tech.html">Under the hood</a>
+			<a class="hide-sm" href="https://github.com/beamcam/beamcam">GitHub</a>
+			<a class="btn primary small" href="./app.html">Open the app</a>
+		</div>
+	</div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+	<div class="wrap hero-grid">
+		<div>
+			<h1>The best camera you own is <span class="grad">sitting in a drawer.</span></h1>
+			<p class="lede">
+				BeamCam turns any phone into a <strong>live camera you can watch from any other screen</strong>.
+				Baby monitor, walkie-talkie, webcam, extra angle. Open a page, scan a QR code, and the
+				video goes <strong>straight from one device to the other</strong>. It never lands on our servers.
+			</p>
+			<p class="kicker">open source · peer-to-peer · in your browser</p>
+			<div class="cta-row">
+				<a class="btn primary" href="./app.html#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
+				<a class="btn" href="./app.html#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
+			</div>
+			<div class="no-list">
+				<span>app store</span><span>account</span><span>cloud upload</span><span>subscription</span><span>trackers</span>
+			</div>
+		</div>
+
+		<svg class="hero-art" viewBox="0 0 520 400" role="img" aria-label="A phone streams video directly to a laptop">
+			<defs>
+				<linearGradient id="beam" x1="0" x2="1">
+					<stop offset="0" stop-color="#6366f1" stop-opacity="0.9"/>
+					<stop offset="1" stop-color="#10b981" stop-opacity="0.9"/>
+				</linearGradient>
+				<linearGradient id="scr" x1="0" y1="0" x2="1" y2="1">
+					<stop offset="0" stop-color="#1e1b4b"/>
+					<stop offset="1" stop-color="#0b1720"/>
+				</linearGradient>
+			</defs>
+			<!-- laptop -->
+			<rect x="196" y="70" width="300" height="196" rx="14" fill="#111117" stroke="#2a2a35" stroke-width="2"/>
+			<rect x="210" y="84" width="272" height="168" rx="6" fill="url(#scr)"/>
+			<circle cx="346" cy="160" r="30" fill="#6366f1" opacity="0.18"/>
+			<path d="M332 176c0-14 6-24 14-24s14 10 14 24" stroke="#a5b4fc" stroke-width="3" fill="none" stroke-linecap="round"/>
+			<circle cx="346" cy="140" r="9" fill="#a5b4fc"/>
+			<rect x="222" y="96" width="46" height="16" rx="8" fill="#ef4444" opacity="0.9"/>
+			<text x="245" y="108" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#fff" font-weight="700">LIVE</text>
+			<rect x="400" y="226" width="70" height="16" rx="8" fill="#10b981" opacity="0.18"/>
+			<text x="435" y="238" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#6ee7b7">P2P · 1.5M</text>
+			<path d="M176 266h340l-14 18H190z" fill="#1a1a22" stroke="#2a2a35" stroke-width="2"/>
+			<!-- beam -->
+			<path d="M118 214 C 160 214, 170 168, 208 168" stroke="url(#beam)" stroke-width="3" fill="none" stroke-dasharray="6 7">
+				<animate attributeName="stroke-dashoffset" from="26" to="0" dur="0.8s" repeatCount="indefinite"/>
+			</path>
+			<!-- phone -->
+			<g transform="rotate(-8 74 230)">
+				<rect x="28" y="122" width="96" height="190" rx="18" fill="#111117" stroke="#3a3a48" stroke-width="2"/>
+				<rect x="36" y="134" width="80" height="166" rx="10" fill="#0c0c12"/>
+				<rect x="46" y="150" width="60" height="60" rx="4" fill="#fff"/>
+				<g fill="#111">
+					<rect x="50" y="154" width="16" height="16"/><rect x="86" y="154" width="16" height="16"/><rect x="50" y="190" width="16" height="16"/>
+					<rect x="72" y="160" width="6" height="6"/><rect x="72" y="176" width="10" height="6"/><rect x="88" y="182" width="6" height="10"/>
+					<rect x="74" y="196" width="6" height="6"/><rect x="88" y="198" width="12" height="6"/>
+				</g>
+				<rect x="44" y="222" width="64" height="16" rx="5" fill="#1e1b4b"/>
+				<text x="76" y="234" text-anchor="middle" font-family="ui-monospace,monospace" font-size="8.5" fill="#a5b4fc">cam-4k2x9q…</text>
+				<circle cx="76" cy="272" r="13" fill="none" stroke="#3a3a48" stroke-width="2"/>
+				<circle cx="76" cy="272" r="6" fill="#ef4444"/>
+			</g>
+			<!-- server, out of the media path -->
+			<g opacity="0.75">
+				<rect x="74" y="24" width="120" height="34" rx="8" fill="none" stroke="#3a3a48" stroke-dasharray="4 4"/>
+				<text x="134" y="45" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#9a9aa8">handshake only</text>
+				<path d="M100 58 L 82 126" stroke="#3a3a48" stroke-dasharray="3 4"/>
+				<path d="M176 58 L 236 84" stroke="#3a3a48" stroke-dasharray="3 4"/>
+			</g>
+		</svg>
+	</div>
+</header>
+
+<!-- ============ MODES ============ -->
+<section id="modes">
+	<div class="wrap">
+		<h2>Three modes. One page. That's it.</h2>
+		<p class="lede">Open beamcam.live on two devices. One films, the other watches. Or skip the network entirely and record what's in front of you.</p>
+
+		<div class="grid c3" style="margin-top:40px">
+			<div class="card mode-card">
+				<div class="ico"><i data-lucide="smartphone"></i></div>
+				<h3>Phone Camera</h3>
+				<p>This device films. It shows a QR code and a pairing code, and picks up the moment someone connects.</p>
+				<ul>
+					<li>Front / back camera, switch live</li>
+					<li>Adaptive bitrate, or force 0.5 to 5 Mbps</li>
+					<li>15 / 24 / 30 / 60 fps</li>
+					<li>Brightness, contrast &amp; grayscale, applied to what's sent</li>
+					<li>Focus &amp; exposure lock (when the hardware allows)</li>
+					<li>Screen stays awake while streaming</li>
+				</ul>
+				<a class="go" href="./app.html#camera">Start filming →</a>
+			</div>
+			<div class="card mode-card">
+				<div class="ico green"><i data-lucide="monitor"></i></div>
+				<h3>Viewer</h3>
+				<p>Any screen watches: laptop, tablet, another phone. Scan the QR code or type the pairing code.</p>
+				<ul>
+					<li>Live video + sound</li>
+					<li><strong>Hold to talk</strong>: your voice comes out of the camera phone</li>
+					<li>Fullscreen, one tap</li>
+					<li>Works across networks, not just the same Wi-Fi</li>
+				</ul>
+				<a class="go" href="./app.html#viewer">Watch a camera →</a>
+			</div>
+			<div class="card mode-card">
+				<div class="ico amber"><i data-lucide="circle-dot"></i></div>
+				<h3>Local Recorder</h3>
+				<p>Record your camera or your screen, with sound, straight to a file. Nothing leaves the device.</p>
+				<ul>
+					<li>Camera or screen capture, up to 1080p</li>
+					<li>WebM / VP9, play it back before you keep it</li>
+					<li>Download or discard. No upload, ever.</li>
+					<li>Works offline once the page is loaded</li>
+				</ul>
+				<a class="go" href="./app.html#record">Start recording →</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ USES ============ -->
+<section id="uses">
+	<div class="wrap">
+		<h2>It started as a webcam. People found better uses for it.</h2>
+		<p class="lede">A tool is worth whatever people end up doing with it. Here's what BeamCam gets used for, and how to set each one up properly.</p>
+
+		<div class="feature" style="margin-top:40px">
+			<div>
+				<span class="tag">Most used</span>
+				<h3 style="font-size:1.7rem;letter-spacing:-0.03em">Baby monitor, with a talk button</h3>
+				<p style="color:var(--muted);margin-top:10px">
+					An old phone on the shelf, your phone in your pocket. You see the cot, you hear every sigh,
+					and you can <strong>hold the talk button and whisper "shhh"</strong> without going in.
+					No proprietary hardware or monthly fee, and no company's server watching your kid sleep.
+				</p>
+				<p style="color:var(--muted);margin-top:14px">
+					It works from the next room or from the other side of town. Same house, same Wi-Fi or mesh:
+					the video stays on your local network.
+				</p>
+				<div class="note">
+					<strong>Straight talk:</strong> BeamCam is a convenience, not a certified safety device.
+					If the Wi-Fi drops, the battery dies or the browser gets killed, the stream stops. Use it to
+					keep an eye out, not as a substitute for one.
+				</div>
+			</div>
+			<div class="steps-col">
+				<h3 style="margin-bottom:18px">Setup in 2 minutes</h3>
+				<ol class="steps">
+					<li><strong>Plug the old phone into a charger.</strong> Streaming all night eats battery.</li>
+					<li>Open <code>beamcam.live</code>, tap <strong>Make this device a camera</strong>, allow camera + mic.</li>
+					<li>Prop it up facing the cot. Pick <strong>Auto</strong> bitrate and <strong>15 fps</strong>: it's a sleeping baby, not a football match.</li>
+					<li>On your phone, <strong>scan the QR code</strong>. Tap <strong>Unmute</strong> to hear.</li>
+					<li>Hold <i data-lucide="radio" style="width:16px;height:16px;vertical-align:-3px"></i> to talk. Release to listen.</li>
+					<li>Leave BeamCam open, in front, on both phones. The camera phone keeps its own screen awake.</li>
+					<li>Dark room? Under <strong>Image &amp; quality</strong>, push brightness up and slide grayscale to 100%: night pictures look cleaner and use less data.</li>
+				</ol>
+				<p style="color:var(--muted);font-size:0.9rem;margin-top:18px">Phone cameras don't have infrared. A dim nightlight still makes a huge difference.</p>
+			</div>
+		</div>
+
+		<div class="grid c3">
+			<div class="card">
+				<div class="ico green"><i data-lucide="radio"></i></div>
+				<h3>Walkie-talkie</h3>
+				<p>Two phones, live picture, hold to talk. Garden to kitchen, workshop to house, upstairs to downstairs.</p>
+				<ul><li>Hold the button, or hold Space on a keyboard</li><li>Echo cancellation built into the browser</li></ul>
+			</div>
+			<div class="card">
+				<div class="ico"><i data-lucide="video"></i></div>
+				<h3>A real webcam</h3>
+				<p>Your phone's back camera beats any laptop webcam. Open the viewer on your computer and capture that window in OBS. Its virtual camera then feeds Zoom, Meet or Teams.</p>
+			</div>
+			<div class="card">
+				<div class="ico amber"><i data-lucide="presentation"></i></div>
+				<h3>Second angle</h3>
+				<p>Overhead shot of your hands, your whiteboard, your soldering iron, your guitar fretboard. For courses, streams and tutorials.</p>
+			</div>
+			<div class="card">
+				<div class="ico"><i data-lucide="paw-print"></i></div>
+				<h3>Pet &amp; home check</h3>
+				<p>Is the dog on the sofa again? Check from work. Works across networks thanks to NAT traversal, not just at home.</p>
+			</div>
+			<div class="card">
+				<div class="ico green"><i data-lucide="printer"></i></div>
+				<h3>Watch a long job</h3>
+				<p>3D printer, oven, kiln, a slow render on another screen. Point a phone at it and go do something else.</p>
+			</div>
+			<div class="card">
+				<div class="ico amber"><i data-lucide="life-buoy"></i></div>
+				<h3>"Show me what's broken"</h3>
+				<p>Your parents' router, the washing machine error code. Send them the link and look through their camera instead of guessing over the phone.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ HOW ============ -->
+<section id="how">
+	<div class="wrap">
+		<p class="kicker">how it works</p>
+		<h2>Scan a code, you're live. No setup wizard.</h2>
+		<div class="how">
+			<div>
+				<div class="n">01</div>
+				<h3>Open it on the camera phone</h3>
+				<p>Tap <em>Phone Camera</em>. You get a random pairing code like <code>cam-4k2x9q…</code> and a QR code. Nothing to install or sign up for.</p>
+			</div>
+			<div>
+				<div class="n">02</div>
+				<h3>Scan from any screen</h3>
+				<p>The QR code opens the viewer and connects on its own. Or type the code on a laptop. Both devices exchange a short handshake through beamcam.live.</p>
+			</div>
+			<div>
+				<div class="n">03</div>
+				<h3>Video flows device to device</h3>
+				<p>After that handshake, WebRTC connects the two devices directly, encrypted end to end. The server only stepped in to make the introduction.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ MANIFESTO ============ -->
+<section class="manifesto">
+	<div class="wrap">
+		<p class="kicker">the part other camera apps leave out</p>
+		<blockquote>
+			Most "smart" cameras send your living room to a server so they can sell it back to you.
+			BeamCam <em>can't</em> do that, because the video never reaches us.
+		</blockquote>
+		<div class="facts">
+			<div><b>Peer-to-peer</b><span>Media flows device to device. Same network? It never leaves the building.</span></div>
+			<div><b>Always encrypted</b><span>DTLS-SRTP, mandatory in WebRTC. Even the rare relayed stream is ciphertext to us.</span></div>
+			<div><b>Zero third parties</b><span>No CDN, no analytics, no ad pixel, no Google Fonts. Every byte comes from beamcam.live.</span></div>
+			<div><b>Open source</b><span>MIT licence. Read it, audit it, host your own. <a href="https://github.com/beamcam/beamcam">github.com/beamcam</a></span></div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section id="limits">
+	<div class="wrap">
+		<p class="kicker">current limits</p>
+		<h2>What it doesn't do, spelled out.</h2>
+		<p class="lede">You'll hit these limits eventually, so here they are now.</p>
+		<div class="limits">
+			<div><b>Not a virtual webcam driver</b><span>Browsers can't install one. For Zoom &amp; co., route the viewer through OBS's virtual camera.</span></div>
+			<div><b>Keep it in the foreground</b><span>Mobile OSes suspend the camera of a backgrounded tab. BeamCam keeps the screen awake. Don't switch apps on the camera phone.</span></div>
+			<div><b>Internet needed to connect</b><span>The handshake goes through beamcam.live even on the same Wi-Fi. After that, local traffic stays local.</span></div>
+			<div><b>The code is the key</b><span>Anyone who has the pairing code (or the QR) can watch. It's random and long. Don't post it publicly.</span></div>
+			<div><b>One viewer at a time</b><span>It's built for one viewer. Want more angles? Use more phones, one code each.</span></div>
+			<div><b>No night vision</b><span>Phone sensors don't see infrared. Low light means grain. Add a little light.</span></div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq">
+	<div class="wrap">
+		<p class="kicker">faq</p>
+		<h2>Questions people actually ask.</h2>
+		<details>
+			<summary>Do both devices need to be on the same Wi-Fi?</summary>
+			<p>No. BeamCam works across networks: 4G to home fibre, office to home. It uses STUN to find a direct path and falls back to a TURN relay when strict firewalls make a direct path impossible. On the same Wi-Fi or mesh network, the video goes over your local network and never touches the internet.</p>
+		</details>
+		<details>
+			<summary>Does the quality adapt to a bad connection?</summary>
+			<p>Yes. In <strong>Auto</strong> mode, the camera phone measures the available bandwidth and packet loss every two seconds and keeps three minutes of history. It settles on a bitrate and resolution the link has actually <em>sustained</em>, not just its best moment. It drops quality right away when the link degrades and climbs back one step at a time once it's clean, so the picture doesn't keep jumping around.</p>
+		</details>
+		<details>
+			<summary>iPhone? Android? Which browsers?</summary>
+			<p>Any recent Chrome, Safari, Firefox or Edge, on iOS, Android, macOS, Windows or Linux. Camera access requires HTTPS, which beamcam.live has. Focus and exposure lock depend on the phone's hardware and browser and appear only when supported.</p>
+		</details>
+		<details>
+			<summary>Can I use it as a webcam in Zoom, Meet or Teams?</summary>
+			<p>Yes, with one extra step. A web page can't register itself as a system camera. Open the viewer on your computer, add it as a <em>Window Capture</em> in OBS Studio and click <em>Start Virtual Camera</em>. Then select "OBS Virtual Camera" in your meeting app.</p>
+		</details>
+		<details>
+			<summary>Is my video recorded anywhere?</summary>
+			<p>No. Live video goes device to device. The Local Recorder writes to your device's memory and gives you a file. Nothing is uploaded. There's no account, so there's nothing to tie a recording to even if we wanted to.</p>
+		</details>
+		<details>
+			<summary>How much battery and data does it use?</summary>
+			<p>Streaming is camera + encoder + radio, all running continuously. Plan on keeping the camera phone plugged in. On mobile data, 1 Mbps is roughly 450 MB per hour. Auto mode or a manual 500 kbps cap keeps that down.</p>
+		</details>
+		<details>
+			<summary>Can I run it on my own server?</summary>
+			<p>Yes. It's a static page, a PeerJS signaling server and coturn. The scripts are in the repo. See <a href="./tech.html#selfhost">Under the hood → Self-hosting</a>.</p>
+		</details>
+	</div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final">
+	<div class="wrap">
+		<h2>Find that old phone in the drawer and put it to work.</h2>
+		<p class="lede">Ten seconds from now it could be a camera.</p>
+		<div class="cta-row">
+			<a class="btn primary" href="./app.html#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
+			<a class="btn" href="./app.html#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
+			<a class="btn" href="./app.html#record"><i data-lucide="circle-dot"></i> Record locally</a>
+		</div>
+	</div>
+</section>
+
+<footer>
+	<div class="wrap">
+		<a class="brand" href="./" style="font-size:1rem">BeamCam</a>
+		<a href="./app.html">App</a>
+		<a href="./tech.html">Under the hood</a>
+		<a href="https://github.com/beamcam/beamcam">GitHub</a>
+		<span class="sp">MIT licence · © 2026 L3DLP</span>
+	</div>
+</footer>
+
+<script>
+	window.addEventListener("load", () => window.lucide && lucide.createIcons());
+</script>
+</body>
+</html>
