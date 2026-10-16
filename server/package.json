@@ -1,12 +1,18 @@
 {
-  "name": "beamcam-peerjs-server",
+  "name": "webrtc-signaling-server",
   "version": "1.0.0",
-  "description": "PeerJS server for BeamCam",
+  "description": "PeerJS signaling + short-lived TURN credentials for peer-to-peer WebRTC",
   "main": "server.js",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "peer": "^1.1.0-rc.2"
+    "express": "^4.22.1",
+    "peer": "^1.0.2"
   }
 }

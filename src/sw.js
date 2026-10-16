@@ -2,8 +2,8 @@
 // Smart caching: offline-first for static assets, network-first for dynamic content
 // Excludes: /peerjs/*, WebSocket connections
 
-const CACHE_NAME = 'beamcam-v3';
-const STATIC_CACHE = 'beamcam-static-v3';
+const CACHE_NAME = 'beamcam-v4';
+const STATIC_CACHE = 'beamcam-static-v4';
 
 // Assets to precache for offline functionality
 const STATIC_ASSETS = [

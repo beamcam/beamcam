@@ -1,9 +1,9 @@
 <div class="app-container">
 	<!-- Header -->
 	<header class="app-header">
-		<a class="logo" href="./" title="BeamCam home">
+		<a class="logo" href="{{APP_HOME_URL}}" title="{{APP_NAME}}">
 			<i data-lucide="camera"></i>
-			<span>BeamCam</span>
+			<span>{{APP_NAME}}</span>
 		</a>
 		<div id="status-badge" class="status-badge disconnected">Disconnected</div>
 	</header>
@@ -33,6 +33,23 @@
 							<span>View camera from another device</span>
 						</div>
 					</button>
+
+					<div class="call-buttons">
+						<button id="btn-call-video" class="secondary-btn">
+							<i data-lucide="phone-call"></i>
+							<div class="btn-text">
+								<strong>Video Call</strong>
+								<span>See each other, 1 to 1</span>
+							</div>
+						</button>
+						<button id="btn-call-audio" class="secondary-btn">
+							<i data-lucide="phone"></i>
+							<div class="btn-text">
+								<strong>Audio Call</strong>
+								<span>Voice only, camera off</span>
+							</div>
+						</button>
+					</div>
 
 					<button id="btn-local" class="secondary-btn" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3);">
 						<i data-lucide="video"></i>
@@ -108,7 +125,7 @@
 				</button>
 			</div>
 			<div class="controls-bar glass-panel">
-				<button id="btn-toggle-camera" class="control-btn active" title="Toggle Camera"><i data-lucide="video"></i></button>
+				<button id="btn-toggle-camera" class="control-btn active" title="Camera, screen or off" data-source-anchor aria-haspopup="menu"><i data-lucide="video"></i></button>
 				<button id="btn-toggle-mic" class="control-btn active" title="Toggle Microphone"><i data-lucide="mic"></i></button>
 				<button id="btn-toggle-speaker" class="control-btn active" title="Toggle Speaker (viewer's voice)"><i data-lucide="volume-2"></i></button>
 				<button id="btn-switch-camera" class="control-btn" title="Switch Camera"><i data-lucide="switch-camera"></i></button>
@@ -124,9 +141,9 @@
 		<section id="viewer-view" class="view">
 			<div class="connect-prompt glass-card">
 				<h2>Connect to Camera</h2>
-				<p>Enter the pairing code displayed on your phone.</p>
+				<p>Enter the pairing code displayed on your phone, or a call code.</p>
 				<div class="input-group">
-					<input type="text" id="input-peer-id" placeholder="e.g. cam-1a2b3c4d5e6f" autocomplete="off" spellcheck="false">
+					<input type="text" id="input-peer-id" placeholder="cam-… or call-…" autocomplete="off" spellcheck="false">
 					<button id="btn-connect" class="primary-btn">Connect</button>
 				</div>
 			</div>
@@ -181,6 +198,71 @@
 			<div class="controls-bar glass-panel hidden" id="local-playback-controls">
 				<button id="btn-local-download" class="control-btn active" style="background: var(--success);"><i data-lucide="download"></i></button>
 				<button id="btn-local-discard" class="control-btn danger"><i data-lucide="trash-2"></i></button>
+			</div>
+		</section>
+
+		<!-- View 5: 1-to-1 Call -->
+		<section id="call-view" class="view">
+			<div class="video-container call-stage">
+				<video id="call-remote" autoplay playsinline></video>
+
+				<div id="call-remote-off" class="call-placeholder hidden">
+					<div class="call-avatar"><i data-lucide="user"></i></div>
+					<span>Camera off</span>
+				</div>
+				<div id="call-waiting" class="call-placeholder">
+					<div class="call-avatar pulse"><i data-lucide="phone-call"></i></div>
+					<span id="call-waiting-text">Waiting for someone to join…</span>
+				</div>
+				<div id="call-remote-muted" class="call-muted-badge hidden"><i data-lucide="mic-off"></i> Muted</div>
+				<button id="btn-call-sound" class="primary-btn call-sound-btn hidden"><i data-lucide="volume-2"></i> Tap to enable sound</button>
+
+				<video id="call-self" class="call-self hidden" autoplay playsinline muted></video>
+
+				<!-- Host: invite card -->
+				<aside id="call-card" class="pairing-card glass-panel hidden">
+					<div class="pc-head">
+						<div>
+							<div class="pc-title" id="call-card-title">Video call</div>
+							<div class="pc-sub">Scan or send the link to the other person</div>
+						</div>
+					</div>
+					<div class="pc-share">
+						<div id="call-qrcode" class="pc-qr"></div>
+						<div class="pc-code-wrap">
+							<span class="pc-label">Call code</span>
+							<code id="call-code" class="pc-code">Generating…</code>
+							<button id="btn-call-copy" class="pc-copy"><i data-lucide="link"></i> Copy link</button>
+						</div>
+					</div>
+				</aside>
+
+				<!-- Joiner: lobby (also the user gesture that unlocks sound on iOS) -->
+				<div id="call-lobby" class="call-lobby hidden">
+					<div class="glass-card">
+						<h2>Join the call</h2>
+						<p class="subtitle"><code id="call-lobby-code"></code></p>
+						<div class="mode-buttons">
+							<button id="btn-join-video" class="primary-btn">
+								<i data-lucide="video"></i>
+								<div class="btn-text"><strong>Join with video</strong><span>Camera and microphone</span></div>
+							</button>
+							<button id="btn-join-audio" class="secondary-btn">
+								<i data-lucide="phone"></i>
+								<div class="btn-text"><strong>Join audio only</strong><span>Microphone, camera stays off</span></div>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="controls-bar glass-panel" id="call-controls">
+				<button id="btn-call-mic" class="control-btn active" title="Microphone"><i data-lucide="mic"></i></button>
+				<button id="btn-call-cam" class="control-btn active" title="Camera, screen or off" data-source-anchor aria-haspopup="menu"><i data-lucide="video"></i></button>
+				<button id="btn-call-switch" class="control-btn" title="Switch Camera"><i data-lucide="switch-camera"></i></button>
+				<button id="btn-call-speaker" class="control-btn active" title="Speaker"><i data-lucide="volume-2"></i></button>
+				<button id="btn-call-fullscreen" class="control-btn" title="Fullscreen"><i data-lucide="maximize"></i></button>
+				<button id="btn-call-hangup" class="control-btn danger" title="Hang up"><i data-lucide="phone-off"></i></button>
 			</div>
 		</section>
 

@@ -1,0 +1,20 @@
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+server/.turn-secret
+*.key
+*.pem
+
+# Build output and dependencies
+dist/
+node_modules/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+*.log

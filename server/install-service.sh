@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Install PeerJS Server as systemd service
+# Install the signaling server (server.js) as a systemd service.
+# Settings are read by server.js from the repository's .env.
 
 set -e
 
@@ -10,65 +11,40 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVICE_NAME="beamcam-peerjs"
-USER="${SUDO_USER:-www-data}"
+SERVICE_NAME="${SERVICE_NAME:-webrtc-signaling}"
+RUN_AS="${SUDO_USER:-www-data}"
+NODE_BIN="$(command -v node)"
 
-echo "🔧 Installing PeerJS Server as systemd service..."
-echo ""
-echo "Service name: $SERVICE_NAME"
-echo "User: $USER"
-echo "Directory: $SCRIPT_DIR"
-echo ""
+echo "🔧 Installing $SERVICE_NAME (user $RUN_AS, dir $SCRIPT_DIR)"
 
-# Create systemd service file
-cat > "/etc/systemd/system/${SERVICE_NAME}.service" << EOF
+cat > "/etc/systemd/system/${SERVICE_NAME}.service" << UNIT
 [Unit]
-Description=BeamCam PeerJS Server
+Description=WebRTC signaling server (PeerJS + TURN credentials)
 After=network.target
 
 [Service]
 Type=simple
-User=$USER
+User=$RUN_AS
 WorkingDirectory=$SCRIPT_DIR
-ExecStart=/usr/bin/node $SCRIPT_DIR/server.js
+ExecStart=$NODE_BIN $SCRIPT_DIR/server.js
 Restart=always
 RestartSec=10
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=$SERVICE_NAME
-
 Environment=NODE_ENV=production
-Environment=PORT=9000
-Environment=HOST=0.0.0.0
-Environment=PATH_PREFIX=/peerjs
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
-EOF
+UNIT
 
-echo "✓ Service file created: /etc/systemd/system/${SERVICE_NAME}.service"
-
-# Reload systemd
 systemctl daemon-reload
-echo "✓ Systemd reloaded"
-
-# Enable service
 systemctl enable "$SERVICE_NAME"
-echo "✓ Service enabled"
-
-# Start service
-systemctl start "$SERVICE_NAME"
-echo "✓ Service started"
+systemctl restart "$SERVICE_NAME"
 
 echo ""
-echo "✅ Installation complete!"
+echo "✅ $SERVICE_NAME running."
+echo "   Status:  systemctl status $SERVICE_NAME"
+echo "   Logs:    journalctl -u $SERVICE_NAME -f"
 echo ""
-echo "Service commands:"
-echo "  Status:  sudo systemctl status $SERVICE_NAME"
-echo "  Stop:    sudo systemctl stop $SERVICE_NAME"
-echo "  Restart: sudo systemctl restart $SERVICE_NAME"
-echo "  Logs:    sudo journalctl -u $SERVICE_NAME -f"
-echo ""
-echo "📝 Don't forget to configure your reverse proxy (nginx/apache) to proxy:"
-echo "   https://beamcam.live/peerjs -> http://localhost:9000/peerjs"
-echo ""
+echo "Proxy https://<APP_DOMAIN>/peerjs/* to 127.0.0.1:<PORT> (see config-samples/)."

@@ -112,16 +112,17 @@
 <!-- ============ MODES ============ -->
 <section id="modes">
 	<div class="wrap">
-		<h2>Three modes. One page. That's it.</h2>
-		<p class="lede">Open beamcam.live on two devices. One films, the other watches. Or skip the network entirely and record what's in front of you.</p>
+		<h2>Four modes. One page. That's it.</h2>
+		<p class="lede">Open beamcam.live on two devices. One films and the other watches, or you call each other. Or skip the network entirely and record what's in front of you.</p>
 
-		<div class="grid c3" style="margin-top:40px">
+		<div class="grid c2" style="margin-top:40px">
 			<div class="card mode-card">
 				<div class="ico"><i data-lucide="smartphone"></i></div>
 				<h3>Phone Camera</h3>
 				<p>This device films. It shows a QR code and a pairing code, and picks up the moment someone connects.</p>
 				<ul>
 					<li>Front / back camera, switch live</li>
+					<li><strong>Camera ⇄ screen share</strong> from the camera button, mid-stream</li>
 					<li>Adaptive bitrate, or force 0.5 to 5 Mbps</li>
 					<li>15 / 24 / 30 / 60 fps</li>
 					<li>Brightness, contrast &amp; grayscale, applied to what's sent</li>
@@ -153,6 +154,20 @@
 					<li>Works offline once the page is loaded</li>
 				</ul>
 				<a class="go" href="./app.html#record">Start recording →</a>
+			</div>
+			<div class="card mode-card">
+				<div class="ico"><i data-lucide="phone-call"></i></div>
+				<h3>1-to-1 Call</h3>
+				<p>Video or audio, both ways. Share a QR code or a link: the other person picks "with video" or "audio only" and you're talking.</p>
+				<ul>
+					<li>Camera, <strong>screen share</strong> or off, switched mid-call. Off means off: zero bitrate, camera released.</li>
+					<li>Shared screens arrive sharp and uncropped: made for live demos, fullscreen</li>
+					<li>Mute, speaker, front/back camera</li>
+					<li>The other side sees an avatar, not a frozen black frame</li>
+					<li>Same P2P encryption, same adaptive quality</li>
+				</ul>
+				<a class="go" href="./app.html#videocall">Start a video call →</a>
+				<a class="go" href="./app.html#audiocall" style="padding-top:8px">Start an audio call →</a>
 			</div>
 		</div>
 	</div>
@@ -206,7 +221,17 @@
 				<ul><li>Hold the button, or hold Space on a keyboard</li><li>Echo cancellation built into the browser</li></ul>
 			</div>
 			<div class="card">
-				<div class="ico"><i data-lucide="video"></i></div>
+				<div class="ico"><i data-lucide="phone-call"></i></div>
+				<h3>Call grandma, no app</h3>
+				<p>No account to create, no app to install for someone who'll never manage it. Send a link, she taps "Join with video", done. Works the same on her old tablet.</p>
+			</div>
+			<div class="card">
+				<div class="ico amber"><i data-lucide="phone"></i></div>
+				<h3>Intercom</h3>
+				<p>An audio call between the workshop and the house, the gate and the kitchen. Camera off by default, switch it on when you need to see who's there.</p>
+			</div>
+			<div class="card">
+				<div class="ico green"><i data-lucide="video"></i></div>
 				<h3>A real webcam</h3>
 				<p>Your phone's back camera beats any laptop webcam. Open the viewer on your computer and capture that window in OBS. Its virtual camera then feeds Zoom, Meet or Teams.</p>
 			</div>
@@ -287,7 +312,7 @@
 			<div><b>Keep it in the foreground</b><span>Mobile OSes suspend the camera of a backgrounded tab. BeamCam keeps the screen awake. Don't switch apps on the camera phone.</span></div>
 			<div><b>Internet needed to connect</b><span>The handshake goes through beamcam.live even on the same Wi-Fi. After that, local traffic stays local.</span></div>
 			<div><b>The code is the key</b><span>Anyone who has the pairing code (or the QR) can watch. It's random and long. Don't post it publicly.</span></div>
-			<div><b>One viewer at a time</b><span>It's built for one viewer. Want more angles? Use more phones, one code each.</span></div>
+			<div><b>One to one</b><span>One viewer per camera, two people per call. No group calls. Want more angles? Use more phones, one code each.</span></div>
 			<div><b>No night vision</b><span>Phone sensors don't see infrared. Low light means grain. Add a little light.</span></div>
 		</div>
 	</div>
@@ -337,6 +362,7 @@
 		<div class="cta-row">
 			<a class="btn primary" href="./app.html#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
 			<a class="btn" href="./app.html#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
+			<a class="btn" href="./app.html#videocall"><i data-lucide="phone-call"></i> Start a call</a>
 			<a class="btn" href="./app.html#record"><i data-lucide="circle-dot"></i> Record locally</a>
 		</div>
 	</div>

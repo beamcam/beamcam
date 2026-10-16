@@ -6,6 +6,18 @@ const log = {
 	error: console.error.bind(console)
 };
 
+// Deployment settings: dist/config.js, generated from .env by bin/build.sh.
+// Public values only (name, hosts, enabled apps); secrets never reach it.
+const CONFIG = window.APP_CONFIG || {};
+const APP_NAME = CONFIG.name || "Cam";
+const SIGNALING = Object.assign(
+	{ host: window.location.hostname, port: 443, path: "/peerjs", secure: true },
+	CONFIG.signaling
+);
+const SIGNALING_URL = `${SIGNALING.secure ? "https" : "http"}://${SIGNALING.host}:${SIGNALING.port}${SIGNALING.path}`;
+const STUN_URL = CONFIG.stun || `stun:${SIGNALING.host}:3478`;
+const APPS = Object.assign({ live: true, videocall: true, audiocall: true, editor: true }, CONFIG.apps);
+
 // State
 let peer = null;
 let localStream = null;
@@ -26,13 +38,15 @@ let pendingTargetId = null; // pairing code to call as soon as the viewer peer i
 let talkTrack = null; // viewer's real mic track, swapped in for push-to-talk
 let filters = { brightness: 1, contrast: 1, grayscale: 0 };
 let filterPipeline = null; // WebGL processing, only alive while a filter is set
+let broadcastSource = "camera"; // what the camera phone sends: "camera" | "screen" | "off"
 
 // DOM Elements
 const views = {
 	selection: document.getElementById("selection-view"),
 	broadcaster: document.getElementById("broadcaster-view"),
 	viewer: document.getElementById("viewer-view"),
-	local: document.getElementById("local-view")
+	local: document.getElementById("local-view"),
+	call: document.getElementById("call-view")
 };
 
 const UI = {
@@ -90,11 +104,11 @@ function switchView(viewName) {
 }
 
 // Generate a cryptographically secure random ID
-function generatePeerId() {
+function generatePeerId(prefix = "cam") {
 	const array = new Uint8Array(8); // 8 bytes = 64 bits of entropy
 	crypto.getRandomValues(array);
 	const id = Array.from(array, byte => byte.toString(36)).join('').substring(0, 12);
-	return `cam-${id}`;
+	return `${prefix}-${id}`;
 }
 
 // Update status UI
@@ -127,7 +141,8 @@ function releaseWakeLock() {
 
 // The lock is dropped whenever the tab is hidden, so take it back on return
 document.addEventListener("visibilitychange", () => {
-	const streaming = views.broadcaster.classList.contains("active") || !!UI.remoteVideo.srcObject;
+	const streaming = views.broadcaster.classList.contains("active") || !!UI.remoteVideo.srcObject ||
+		views.call.classList.contains("active");
 	if (document.visibilityState === "visible" && streaming && !wakeLock) {
 		requestWakeLock();
 	}
@@ -144,7 +159,7 @@ async function getIceConfig() {
 	if (iceConfigCache && now < iceConfigExpiry) return iceConfigCache;
 
 	try {
-		const response = await fetch("https://beamcam.live/peerjs/turn", { cache: "no-store" });
+		const response = await fetch(`${SIGNALING_URL}/turn`, { cache: "no-store" });
 		if (!response.ok) throw new Error("HTTP " + response.status);
 		const data = await response.json();
 		iceConfigCache = { iceServers: data.iceServers, iceTransportPolicy: "all" };
@@ -153,7 +168,7 @@ async function getIceConfig() {
 	} catch (err) {
 		log.error("TURN credentials unavailable, falling back to STUN only:", err.message);
 		return {
-			iceServers: [{ urls: "stun:beamcam.live:3478" }],
+			iceServers: [{ urls: STUN_URL }],
 			iceTransportPolicy: "all"
 		};
 	}
@@ -177,15 +192,7 @@ async function startBroadcaster() {
 	UI.pairingPillCode.textContent = peerId;
 	showPairingCard(true);
 
-	// Use our own PeerJS server on beamcam.live
-	peer = new Peer(peerId, {
-		host: 'beamcam.live',
-		port: 443,
-		path: '/peerjs',
-		secure: true,
-		debug: 3,
-		config: await getIceConfig()
-	});
+	peer = new Peer(peerId, peerOptions(await getIceConfig()));
 
 	peer.on("open", (id) => {
 		log.debug("✅ Broadcaster peer opened with ID:", id);
@@ -228,7 +235,8 @@ async function startBroadcaster() {
 	// 2. Start Camera. Not awaited: the call handler below must be attached
 	// right away, or a viewer who scans the QR code while the permission
 	// prompt is still up gets dropped (PeerJS doesn't replay missed events).
-	const cameraReady = initCamera();
+	broadcastSource = "camera";
+	const cameraReady = initCamera().then(refreshBroadcastControls);
 	requestWakeLock();
 
 	// 3. Answer incoming calls automatically
@@ -371,6 +379,7 @@ async function initCamera() {
 }
 
 function applyBitrateToSender(sender, scaleDown = 1) {
+	if (isScreenSharing()) scaleDown = 1; // text must stay sharp; fps gives way instead
 	const parameters = sender.getParameters();
 	if (!parameters.encodings || parameters.encodings.length === 0) {
 		parameters.encodings = [{}];
@@ -385,6 +394,158 @@ function applyBitrateToSender(sender, scaleDown = 1) {
 function showPairingCard(show) {
 	UI.pairingCard.classList.toggle("hidden", !show);
 	UI.pairingPill.classList.toggle("hidden", show);
+}
+
+// ==========================================
+// VIDEO SOURCE: camera / screen / off
+// ==========================================
+// Wherever we send live video, the camera button opens a menu to switch
+// between the camera, a screen share and nothing. The swap is a
+// replaceTrack() on the existing video sender: no renegotiation, the call
+// stays up. Screen tracks get contentHint "detail" so the encoder keeps
+// resolution (sharp text) and drops frame rate instead, and the adaptive
+// bitrate never scales them down.
+
+const SCREEN_SHARE_SUPPORTED = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+
+async function openScreenTrack() {
+	const stream = await navigator.mediaDevices.getDisplayMedia({
+		video: { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 15, max: 30 } },
+		audio: false
+	});
+	const track = stream.getVideoTracks()[0];
+	if ("contentHint" in track) track.contentHint = "detail";
+	return track;
+}
+
+function isScreenSharing() {
+	return broadcastSource === "screen" || callSession.source === "screen";
+}
+
+// The picker. A "cancelled" screen prompt is not an error worth a toast.
+function sourceError(kind, err) {
+	if (err && err.name === "NotAllowedError" && kind === "screen") return;
+	showToast(kind === "screen" ? "Screen sharing failed" : "Camera unavailable");
+}
+
+function closeSourceMenu() {
+	const menu = document.getElementById("source-menu");
+	if (menu) menu.remove();
+	document.removeEventListener("pointerdown", onSourceMenuOutside, true);
+	document.removeEventListener("keydown", onSourceMenuKey);
+}
+
+function onSourceMenuOutside(e) {
+	const menu = document.getElementById("source-menu");
+	if (menu && !menu.contains(e.target) && !e.target.closest("[data-source-anchor]")) closeSourceMenu();
+}
+
+function onSourceMenuKey(e) {
+	if (e.key === "Escape") closeSourceMenu();
+}
+
+function openSourceMenu(anchor, current, onPick) {
+	if (document.getElementById("source-menu")) return closeSourceMenu(); // second click closes
+	const items = [
+		{ kind: "camera", icon: "video", label: "Camera" },
+		{ kind: "screen", icon: "monitor-up", label: "Share screen", disabled: !SCREEN_SHARE_SUPPORTED, note: "Not available on this device" },
+		{ kind: "off", icon: "video-off", label: "Turn video off" }
+	];
+	const menu = document.createElement("div");
+	menu.id = "source-menu";
+	menu.className = "source-menu glass-panel";
+	menu.setAttribute("role", "menu");
+	items.forEach((it) => {
+		const b = document.createElement("button");
+		b.className = "source-item" + (it.kind === current ? " current" : "");
+		b.disabled = !!it.disabled;
+		b.setAttribute("role", "menuitemradio");
+		b.setAttribute("aria-checked", it.kind === current);
+		b.innerHTML = `<i data-lucide="${it.icon}"></i><span>${it.label}${it.disabled ? `<small>${it.note}</small>` : ""}</span>` +
+			(it.kind === current ? `<i data-lucide="check" class="source-check"></i>` : "");
+		b.addEventListener("click", () => {
+			closeSourceMenu();
+			if (it.kind !== current) onPick(it.kind);
+		});
+		menu.appendChild(b);
+	});
+	// In fullscreen only the fullscreen element is painted
+	(document.fullscreenElement || document.body).appendChild(menu);
+	lucide.createIcons();
+
+	const r = anchor.getBoundingClientRect();
+	const w = menu.offsetWidth;
+	menu.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+	menu.style.bottom = (window.innerHeight - r.top + 10) + "px";
+
+	document.addEventListener("pointerdown", onSourceMenuOutside, true);
+	document.addEventListener("keydown", onSourceMenuKey);
+}
+
+function sourceIcon(kind) {
+	return kind === "screen" ? "monitor-up" : kind === "camera" ? "video" : "video-off";
+}
+
+// --- camera phone (broadcaster)
+
+function refreshBroadcastControls() {
+	const btn = document.getElementById("btn-toggle-camera");
+	btn.classList.toggle("active", broadcastSource !== "off");
+	setIcon(btn, sourceIcon(broadcastSource));
+	document.getElementById("btn-switch-camera").classList.toggle("hidden", broadcastSource !== "camera");
+	UI.localVideo.classList.toggle("screen", broadcastSource === "screen");
+}
+
+async function setBroadcastSource(kind) {
+	if (!localStream) return;
+	let track;
+	try {
+		if (kind === "camera") {
+			track = (await navigator.mediaDevices.getUserMedia({
+				video: {
+					facingMode: currentFacingMode,
+					width: { ideal: 1280 },
+					height: { ideal: 720 },
+					frameRate: { ideal: currentFramerate }
+				}
+			})).getVideoTracks()[0];
+		} else if (kind === "screen") {
+			track = await openScreenTrack();
+		} else {
+			track = placeholderVideoTrack(); // viewer sees black, hardware released
+		}
+	} catch (err) {
+		log.error("Source switch failed:", err.name);
+		return sourceError(kind, err);
+	}
+
+	const old = localStream.getVideoTracks()[0];
+	if (old) {
+		localStream.removeTrack(old);
+		old.stop();
+	}
+	localStream.addTrack(track);
+	broadcastSource = kind;
+
+	// The browser's own "Stop sharing" button: fall back to the camera
+	if (kind === "screen") {
+		track.addEventListener("ended", () => {
+			if (localStream && localStream.getVideoTracks()[0] === track) setBroadcastSource("camera");
+		});
+	}
+
+	if (filterPipeline) filterPipeline.setSource(localStream);
+	UI.localVideo.srcObject = null;
+	UI.localVideo.srcObject = getOutgoingStream();
+
+	const sender = currentCall && currentCall.peerConnection &&
+		currentCall.peerConnection.getSenders().find((s) => s.track && s.track.kind === "video");
+	if (sender) {
+		await sender.replaceTrack(filterPipeline ? filterPipeline.track : track);
+		applyBitrateToSender(sender, autoBitrate ? ADAPT_LEVELS[adaptLevel][1] : 1);
+	}
+	refreshBroadcastControls();
+	if (kind === "screen") showToast("Sharing your screen");
 }
 
 // ==========================================
@@ -704,14 +865,7 @@ async function startViewer() {
 	switchView("viewer");
 	updateStatus("Initializing...");
 
-	peer = new Peer({
-		host: 'beamcam.live',
-		port: 443,
-		path: '/peerjs',
-		secure: true,
-		debug: 3,
-		config: await getIceConfig()
-	});
+	peer = new Peer(peerOptions(await getIceConfig()));
 
 	peer.on("open", (id) => {
 		log.debug("Viewer peer initialized with ID:", id);
@@ -739,8 +893,15 @@ async function connectToCamera() {
 		return;
 	}
 
+	// A call code typed here: hand over to the call lobby
+	if (/^call-[a-z0-9]{4,16}$/i.test(targetId) && (APPS.videocall || APPS.audiocall)) {
+		if (peer) peer.destroy();
+		openJoinLobby(targetId);
+		return;
+	}
+
 	// Validation: format check (cam-XXXX where X is alphanumeric, length 4-16)
-	if (!/^cam-[a-z0-9]{4,16}$/i.test(targetId)) {
+	if (!APPS.live || !/^cam-[a-z0-9]{4,16}$/i.test(targetId)) {
 		showToast("Invalid pairing code format");
 		return;
 	}
@@ -1010,10 +1171,422 @@ function downloadRecording() {
 	document.body.appendChild(a);
 	a.style = "display: none";
 	a.href = url;
-	a.download = `beamcam_recording_${new Date().getTime()}.webm`;
+	a.download = `${APP_NAME.toLowerCase().replace(/[^a-z0-9]+/g, "-")}_recording_${new Date().getTime()}.webm`;
 	a.click();
 	window.URL.revokeObjectURL(url);
 	showToast("Download started!");
+}
+
+// ==========================================
+// 1-TO-1 CALL
+// ==========================================
+// Same plumbing as camera/viewer, but both ends send. The host shows a
+// call-xxxx code; the joiner dials it. Both m-lines (audio + video) are
+// always negotiated - with a 1 fps black placeholder when the camera is off -
+// so the camera can be switched on and off later with replaceTrack(), no
+// renegotiation. "Off" really is off: the sender gets a null track (zero
+// bitrate) and the camera hardware is released. A small data channel carries
+// cam/mic state so the other side shows an avatar instead of a black frame.
+
+const CALL_AUDIO = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+
+const callSession = {
+	role: null,        // "host" | "joiner"
+	media: null,       // MediaConnection
+	conn: null,        // DataConnection (state messages)
+	mic: null,         // our mic track
+	cam: null,         // our outgoing video track (camera or screen), null when off
+	source: null,      // "camera" | "screen" | null
+	prevSource: null,  // where to go back to when a screen share ends
+	facing: "user",
+	placeholder: null, // black video track used for negotiation only
+	silence: null,     // silent audio track if the mic is unavailable
+	remoteCam: true,
+	timeout: null
+};
+
+const CallUI = {
+	remote: document.getElementById("call-remote"),
+	self: document.getElementById("call-self"),
+	remoteOff: document.getElementById("call-remote-off"),
+	waiting: document.getElementById("call-waiting"),
+	waitingText: document.getElementById("call-waiting-text"),
+	muted: document.getElementById("call-remote-muted"),
+	sound: document.getElementById("btn-call-sound"),
+	card: document.getElementById("call-card"),
+	cardTitle: document.getElementById("call-card-title"),
+	code: document.getElementById("call-code"),
+	lobby: document.getElementById("call-lobby"),
+	lobbyCode: document.getElementById("call-lobby-code"),
+	controls: document.getElementById("call-controls"),
+	btnMic: document.getElementById("btn-call-mic"),
+	btnCam: document.getElementById("btn-call-cam"),
+	btnSwitch: document.getElementById("btn-call-switch"),
+	btnSpeaker: document.getElementById("btn-call-speaker")
+};
+
+function placeholderVideoTrack() {
+	const canvas = document.createElement("canvas");
+	canvas.width = 640;
+	canvas.height = 480;
+	canvas.getContext("2d").fillRect(0, 0, 640, 480);
+	return canvas.captureStream(1).getVideoTracks()[0];
+}
+
+function silentAudioTrack() {
+	const ctx = new AudioContext();
+	return ctx.createMediaStreamDestination().stream.getAudioTracks()[0];
+}
+
+async function openCallCamera() {
+	const stream = await navigator.mediaDevices.getUserMedia({
+		video: { facingMode: callSession.facing, width: { ideal: 1280 }, height: { ideal: 720 } }
+	});
+	return stream.getVideoTracks()[0];
+}
+
+async function setupCallMedia(withVideo) {
+	try {
+		const stream = await navigator.mediaDevices.getUserMedia({ audio: CALL_AUDIO });
+		callSession.mic = stream.getAudioTracks()[0];
+	} catch (err) {
+		log.error("Mic error:", err.name);
+		showToast("Microphone unavailable: you can listen but not talk");
+	}
+	if (withVideo) {
+		try {
+			callSession.cam = await openCallCamera();
+			callSession.source = "camera";
+		} catch (err) {
+			log.error("Camera error:", err.name);
+			showToast("Camera unavailable: continuing with audio only");
+		}
+	}
+	refreshCallControls();
+	showSelfView();
+}
+
+// The stream handed to PeerJS: always one video + one audio track
+function negotiationStream() {
+	if (!callSession.placeholder) callSession.placeholder = placeholderVideoTrack();
+	if (!callSession.mic && !callSession.silence) callSession.silence = silentAudioTrack();
+	return new MediaStream([callSession.cam || callSession.placeholder, callSession.mic || callSession.silence]);
+}
+
+function callSender(kind) {
+	const pc = callSession.media && callSession.media.peerConnection;
+	if (!pc) return null;
+	const t = pc.getTransceivers().find((tr) => tr.receiver.track && tr.receiver.track.kind === kind);
+	return t ? t.sender : null;
+}
+
+// Push the real camera state to the video sender (null = send nothing)
+async function syncCamSender() {
+	const sender = callSender("video");
+	if (sender) await sender.replaceTrack(callSession.cam || null).catch((e) => log.debug("replaceTrack:", e));
+}
+
+function sendCallState() {
+	if (callSession.conn && callSession.conn.open) {
+		callSession.conn.send({
+			cam: !!callSession.cam,
+			screen: callSession.source === "screen",
+			mic: !!(callSession.mic && callSession.mic.enabled)
+		});
+	}
+}
+
+function showSelfView() {
+	CallUI.self.classList.toggle("hidden", !callSession.cam);
+	CallUI.self.classList.toggle("mirror", callSession.source === "camera" && callSession.facing === "user");
+	CallUI.self.classList.toggle("screen", callSession.source === "screen");
+	CallUI.self.srcObject = callSession.cam ? new MediaStream([callSession.cam]) : null;
+}
+
+function refreshCallControls() {
+	const micOn = !!(callSession.mic && callSession.mic.enabled);
+	CallUI.btnMic.classList.toggle("active", micOn);
+	setIcon(CallUI.btnMic, micOn ? "mic" : "mic-off");
+	CallUI.btnCam.classList.toggle("active", !!callSession.cam);
+	setIcon(CallUI.btnCam, sourceIcon(callSession.source || "off"));
+	CallUI.btnSwitch.classList.toggle("hidden", callSession.source !== "camera");
+}
+
+function updateRemoteView() {
+	const connected = !!CallUI.remote.srcObject;
+	CallUI.waiting.classList.toggle("hidden", connected);
+	CallUI.remoteOff.classList.toggle("hidden", !connected || callSession.remoteCam);
+}
+
+function playRemote() {
+	CallUI.remote.play().then(() => {
+		CallUI.sound.classList.add("hidden");
+	}).catch(() => {
+		// Autoplay with sound refused: one tap fixes it
+		CallUI.sound.classList.remove("hidden");
+	});
+}
+
+function resetCallStage(waitingText) {
+	CallUI.remote.srcObject = null;
+	callSession.remoteCam = true;
+	CallUI.remote.classList.remove("screen");
+	CallUI.muted.classList.add("hidden");
+	CallUI.sound.classList.add("hidden");
+	CallUI.waitingText.textContent = waitingText;
+	updateRemoteView();
+}
+
+function attachCallMedia(mediaConnection) {
+	callSession.media = mediaConnection;
+
+	mediaConnection.on("stream", (remoteStream) => {
+		if (CallUI.remote.srcObject === remoteStream) return; // fired once per track
+		clearTimeout(callSession.timeout);
+		CallUI.remote.srcObject = remoteStream;
+		playRemote();
+		updateRemoteView();
+		CallUI.card.classList.add("hidden");
+		updateStatus("In call", true);
+		syncCamSender();
+		startAdaptiveBitrate(mediaConnection);
+		requestWakeLock();
+	});
+
+	// Late events from a call we already ended must not end the next one
+	const current = () => callSession.media === mediaConnection;
+	mediaConnection.on("close", () => current() && endCall("Call ended"));
+	mediaConnection.on("error", (err) => {
+		log.error("Call error:", err);
+		if (current()) endCall("Call failed");
+	});
+
+	// PeerJS doesn't always fire "close" on the far side: watch ICE too
+	const watchIce = () => {
+		const pc = mediaConnection.peerConnection;
+		if (!pc) return setTimeout(watchIce, 500);
+		pc.addEventListener("iceconnectionstatechange", () => {
+			if ((pc.iceConnectionState === "failed" || pc.iceConnectionState === "closed") && current()) {
+				endCall("Connection lost");
+			}
+		});
+	};
+	watchIce();
+
+	// Drop the placeholder as soon as the sender exists, if the camera is off
+	setTimeout(syncCamSender, 0);
+}
+
+function attachCallData(conn) {
+	callSession.conn = conn;
+	conn.on("open", sendCallState);
+	conn.on("data", (msg) => {
+		if (!msg || typeof msg !== "object" || callSession.conn !== conn) return;
+		if (msg.bye) return endCall("The other person hung up");
+		if (typeof msg.cam === "boolean") {
+			callSession.remoteCam = msg.cam;
+			updateRemoteView();
+		}
+		if (typeof msg.screen === "boolean") {
+			// A shared screen must be shown whole, never cropped
+			CallUI.remote.classList.toggle("screen", msg.screen);
+		}
+		if (typeof msg.mic === "boolean") {
+			CallUI.muted.classList.toggle("hidden", msg.mic);
+		}
+	});
+	conn.on("close", () => {
+		if (callSession.conn === conn) endCall("Call ended");
+	});
+}
+
+function peerOptions(iceConfig) {
+	return { ...SIGNALING, debug: DEBUG ? 2 : 0, config: iceConfig };
+}
+
+async function startCallHost(withVideo) {
+	switchView("call");
+	callSession.role = "host";
+	callSession.facing = "user";
+	CallUI.lobby.classList.add("hidden");
+	CallUI.controls.classList.remove("hidden");
+	CallUI.cardTitle.textContent = withVideo ? "Video call" : "Audio call";
+	CallUI.card.classList.remove("hidden");
+	resetCallStage("Waiting for someone to join…");
+	updateStatus("Starting call…");
+
+	await setupCallMedia(withVideo);
+
+	const id = generatePeerId("call");
+	CallUI.code.textContent = id;
+	peer = new Peer(id, peerOptions(await getIceConfig()));
+
+	peer.on("open", () => {
+		updateStatus("Waiting for the other person");
+		const qr = document.getElementById("call-qrcode");
+		qr.innerHTML = "";
+		new QRCode(qr, {
+			text: `${window.location.origin}${window.location.pathname}#${id}`,
+			width: 180,
+			height: 180,
+			colorDark: "#000000",
+			colorLight: "#ffffff",
+			correctLevel: QRCode.CorrectLevel.M
+		});
+	});
+
+	// 1 to 1: anyone else knocking while we're busy is turned away
+	peer.on("call", (incoming) => {
+		if (callSession.media) return incoming.close();
+		incoming.answer(negotiationStream());
+		attachCallMedia(incoming);
+	});
+	peer.on("connection", (conn) => {
+		if (callSession.conn && callSession.conn.open) return conn.close();
+		attachCallData(conn);
+	});
+	peer.on("disconnected", () => { if (!peer.destroyed) peer.reconnect(); });
+	peer.on("error", (err) => {
+		log.error("Call peer error:", err.type);
+		showToast("Connection error: " + err.type);
+	});
+}
+
+function openJoinLobby(targetId) {
+	switchView("call");
+	callSession.role = "joiner";
+	CallUI.card.classList.add("hidden");
+	CallUI.controls.classList.add("hidden");
+	CallUI.lobbyCode.textContent = targetId;
+	CallUI.lobby.dataset.target = targetId;
+	CallUI.lobby.classList.remove("hidden");
+	resetCallStage("Connecting…");
+	updateStatus("Ready to join");
+}
+
+async function joinCall(withVideo) {
+	const targetId = CallUI.lobby.dataset.target;
+	CallUI.lobby.classList.add("hidden");
+	CallUI.controls.classList.remove("hidden");
+	callSession.facing = "user";
+	updateStatus("Connecting…");
+
+	await setupCallMedia(withVideo);
+
+	peer = new Peer(peerOptions(await getIceConfig()));
+	peer.on("open", () => {
+		attachCallMedia(peer.call(targetId, negotiationStream()));
+		attachCallData(peer.connect(targetId, { reliable: true }));
+		callSession.timeout = setTimeout(() => {
+			if (!CallUI.remote.srcObject) endCall("No answer: check the code, or the call has ended");
+		}, 15000);
+	});
+	peer.on("error", (err) => {
+		log.error("Join error:", err.type);
+		endCall(err.type === "peer-unavailable" ? "That call doesn't exist (anymore)" : "Connection error: " + err.type);
+	});
+}
+
+// Ends the conversation. The host keeps its code and waits for the next
+// caller; the joiner goes home.
+function endCall(reason) {
+	if (!callSession.role) return;
+	clearTimeout(callSession.timeout);
+	stopAdaptiveBitrate();
+	const media = callSession.media, conn = callSession.conn;
+	callSession.media = null;
+	callSession.conn = null;
+	if (conn && conn.open) {
+		try { conn.send({ bye: true }); } catch (e) { /* closing anyway */ }
+	}
+	setTimeout(() => {
+		if (media) media.close();
+		if (conn) conn.close();
+	}, 100);
+
+	if (reason) showToast(reason);
+
+	if (callSession.role === "host" && peer && !peer.destroyed) {
+		resetCallStage("Waiting for someone to join…");
+		CallUI.card.classList.remove("hidden");
+		updateStatus("Waiting for the other person");
+	} else {
+		leaveCall();
+	}
+}
+
+// Full teardown: release camera/mic, drop the peer, back to the menu
+function leaveCall() {
+	const role = callSession.role;
+	callSession.role = null;
+	clearTimeout(callSession.timeout);
+	stopAdaptiveBitrate();
+	[callSession.mic, callSession.cam, callSession.placeholder, callSession.silence].forEach((t) => t && t.stop());
+	Object.assign(callSession, { media: null, conn: null, mic: null, cam: null, source: null, prevSource: null, placeholder: null, silence: null, remoteCam: true });
+	CallUI.remote.classList.remove("screen");
+	if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+	CallUI.remote.srcObject = null;
+	CallUI.self.srcObject = null;
+	// Give the "bye" message a moment to leave before tearing the peer down
+	const oldPeer = peer;
+	if (oldPeer && role) setTimeout(() => oldPeer.destroy(), 200);
+	releaseWakeLock();
+	updateStatus("Disconnected");
+	switchView("selection");
+}
+
+async function setCallSource(kind) {
+	let track = null;
+	try {
+		if (kind === "camera") track = await openCallCamera();
+		else if (kind === "screen") track = await openScreenTrack();
+	} catch (err) {
+		log.error("Source switch failed:", err.name);
+		return sourceError(kind, err);
+	}
+
+	if (callSession.cam) callSession.cam.stop(); // releases the hardware, camera light goes off
+	if (kind === "screen") callSession.prevSource = callSession.source;
+	callSession.cam = track;
+	callSession.source = track ? kind : null;
+
+	// The browser's own "Stop sharing" button: back to what we had before
+	if (kind === "screen") {
+		track.addEventListener("ended", () => {
+			if (callSession.cam === track) setCallSource(callSession.prevSource || "off");
+		});
+	}
+
+	await syncCamSender();
+	const sender = callSender("video");
+	if (sender && track) applyBitrateToSender(sender, ADAPT_LEVELS[adaptLevel][1]);
+	showSelfView();
+	refreshCallControls();
+	sendCallState();
+}
+
+async function switchCallCamera() {
+	if (callSession.source !== "camera") return;
+	callSession.facing = callSession.facing === "user" ? "environment" : "user";
+	const old = callSession.cam;
+	try {
+		old.stop(); // some phones can't open both cameras at once
+		callSession.cam = await openCallCamera();
+	} catch (err) {
+		showToast("Could not switch camera");
+		callSession.cam = null;
+	}
+	await syncCamSender();
+	showSelfView();
+	refreshCallControls();
+	sendCallState();
+}
+
+function toggleCallMic() {
+	if (!callSession.mic) return showToast("No microphone available");
+	callSession.mic.enabled = !callSession.mic.enabled;
+	refreshCallControls();
+	sendCallState();
 }
 
 // ==========================================
@@ -1120,14 +1693,7 @@ document.getElementById("btn-toggle-speaker").addEventListener("click", (e) => {
 });
 
 document.getElementById("btn-toggle-camera").addEventListener("click", (e) => {
-	const btn = e.currentTarget;
-	if (localStream) {
-		const videoTrack = localStream.getVideoTracks()[0];
-		if (videoTrack) {
-			videoTrack.enabled = !videoTrack.enabled;
-			btn.classList.toggle("active");
-		}
-	}
+	openSourceMenu(e.currentTarget, broadcastSource, setBroadcastSource);
 });
 
 document.getElementById("btn-toggle-mic").addEventListener("click", (e) => {
@@ -1270,6 +1836,38 @@ document.addEventListener("keyup", (e) => {
 	if (e.code === "Space") stopTalking();
 });
 
+// Call controls
+document.getElementById("btn-call-video").addEventListener("click", () => startCallHost(true));
+document.getElementById("btn-call-audio").addEventListener("click", () => startCallHost(false));
+document.getElementById("btn-join-video").addEventListener("click", () => joinCall(true));
+document.getElementById("btn-join-audio").addEventListener("click", () => joinCall(false));
+CallUI.btnMic.addEventListener("click", toggleCallMic);
+CallUI.btnCam.addEventListener("click", (e) => openSourceMenu(e.currentTarget, callSession.source || "off", setCallSource));
+function toggleFullscreen(el) {
+	if (document.fullscreenElement) return document.exitFullscreen().catch(() => {});
+	if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+	else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); // Safari
+}
+document.getElementById("btn-call-fullscreen").addEventListener("click", () => toggleFullscreen(views.call));
+CallUI.remote.addEventListener("dblclick", () => toggleFullscreen(views.call));
+UI.remoteVideo.addEventListener("dblclick", () => toggleFullscreen(UI.remoteVideoContainer));
+CallUI.btnSwitch.addEventListener("click", switchCallCamera);
+CallUI.btnSpeaker.addEventListener("click", () => {
+	CallUI.remote.muted = !CallUI.remote.muted;
+	CallUI.btnSpeaker.classList.toggle("active", !CallUI.remote.muted);
+	setIcon(CallUI.btnSpeaker, CallUI.remote.muted ? "volume-x" : "volume-2");
+});
+CallUI.sound.addEventListener("click", playRemote);
+document.getElementById("btn-call-hangup").addEventListener("click", () => {
+	endCall(null);
+	leaveCall();
+});
+document.getElementById("btn-call-copy").addEventListener("click", () => {
+	const url = `${window.location.origin}${window.location.pathname}#${CallUI.code.textContent}`;
+	navigator.clipboard.writeText(url);
+	showToast("Call link copied!");
+});
+
 // Local Recorder Controls
 document
 	.getElementById("btn-local-camera")
@@ -1306,7 +1904,7 @@ async function checkPeerServerConnectivity() {
 		const timeoutId = setTimeout(() => controller.abort(), 3000);
 
 		// Not /peers: discovery is disabled server-side, so it always answers 401
-		const response = await fetch('https://beamcam.live/peerjs/', {
+		const response = await fetch(`${SIGNALING_URL}/`, {
 			signal: controller.signal,
 			cache: 'no-store'
 		});
@@ -1352,8 +1950,35 @@ window.addEventListener('offline', () => {
 // Hash-based routing:
 //   #cam-xxxx  -> open viewer and connect (QR codes / shared links)
 //   #camera, #viewer, #record -> open that mode directly (landing page buttons)
+// Apps switched off in .env (APP_LIVE, APP_VIDEOCALL, APP_AUDIOCALL,
+// APP_EDITOR): their tiles disappear and their links stop working.
+function applyAppFlags() {
+	const show = (id, on) => document.getElementById(id).classList.toggle("hidden", !on);
+	show("btn-broadcaster", APPS.live);
+	show("btn-viewer", APPS.live || APPS.videocall || APPS.audiocall); // also where call codes are typed
+	show("btn-call-video", APPS.videocall);
+	show("btn-call-audio", APPS.audiocall);
+	document.querySelector(".call-buttons").classList.toggle("hidden", !APPS.videocall && !APPS.audiocall);
+	show("btn-local", APPS.editor);
+	show("btn-join-video", APPS.videocall);
+	show("btn-join-audio", APPS.audiocall);
+	show("btn-call-cam", APPS.videocall); // audio-only deployments never send video
+	if (!APPS.live) {
+		document.querySelector("#btn-viewer strong").textContent = "Join a call";
+		document.querySelector("#btn-viewer .btn-text span").textContent = "Enter a call code";
+	}
+}
+
 function routeFromHash() {
 	const hash = window.location.hash.substring(1);
+	const allowed = {
+		camera: APPS.live, viewer: APPS.live, record: APPS.editor,
+		videocall: APPS.videocall, audiocall: APPS.audiocall
+	};
+	if (hash in allowed && !allowed[hash]) return;
+	if (/^cam-/i.test(hash) && !APPS.live) return;
+	if (/^call-/i.test(hash) && !APPS.videocall && !APPS.audiocall) return;
+
 	if (/^cam-[a-z0-9]{4,16}$/i.test(hash)) {
 		log.debug("Auto-connecting to:", hash);
 		pendingTargetId = hash;
@@ -1364,13 +1989,20 @@ function routeFromHash() {
 		startViewer();
 	} else if (hash === "record") {
 		startLocalRecorder();
+	} else if (hash === "videocall") {
+		startCallHost(true);
+	} else if (hash === "audiocall") {
+		startCallHost(false);
+	} else if (/^call-[a-z0-9]{4,16}$/i.test(hash)) {
+		openJoinLobby(hash);
 	}
 }
 
+applyAppFlags();
 window.addEventListener("load", routeFromHash);
 
-// Service Worker: DISABLED. It intercepted the PeerJS signaling connection
-// (see TODO.md). Unregister any worker left over from earlier versions.
+// Service Worker: DISABLED. An earlier one intercepted the PeerJS signaling
+// WebSocket. Unregister any worker left over from earlier versions.
 if ("serviceWorker" in navigator) {
 	navigator.serviceWorker.getRegistrations().then((registrations) => {
 		for (let registration of registrations) {

@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Installation script for PeerJS Server
+# Install the signaling server dependencies (npm)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "🔧 Installing PeerJS Server..."
+echo "🔧 Installing signaling server dependencies..."
 echo ""
 
 # Check if node is installed
 if ! command -v node &> /dev/null; then
     echo "❌ Node.js is not installed!"
-    echo "   Install Node.js first: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs"
+    echo "   Install Node.js first: curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs"
     exit 1
 fi
 

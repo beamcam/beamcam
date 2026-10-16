@@ -34,6 +34,7 @@
 		<a href="#handshake">The handshake</a>
 		<a href="#nat">NAT traversal</a>
 		<a href="#talk">Push-to-talk</a>
+		<a href="#call">1-to-1 calls</a>
 		<a href="#adaptive">Adaptive bitrate</a>
 		<a href="#filters">Image filters</a>
 		<a href="#recorder">Local recorder</a>
@@ -201,6 +202,51 @@ mic.enabled = pressed;              <span class="c">// on every press / release<
 			</p>
 		</section>
 
+		<section id="call">
+			<h2>1-to-1 calls</h2>
+			<p>
+				Same signaling and the same pairing flow, but both ends send. The host registers a
+				<code>call-…</code> id; the joiner gets a lobby ("with video" / "audio only"). That tap is also
+				the user gesture iOS wants before it plays sound.
+			</p>
+			<ul>
+				<li><strong>Both m-lines are always negotiated.</strong> With the camera off, a 1 fps black
+					canvas track stands in for the offer/answer, then the sender gets
+					<code>replaceTrack(null)</code>: nothing is encoded, nothing is sent.</li>
+				<li><strong>Camera off really is off.</strong> The track is stopped, the hardware is released and
+					the camera light goes out. Turning it back on is <code>getUserMedia()</code> +
+					<code>replaceTrack()</code>, with no renegotiation.</li>
+				<li><strong>A data channel carries state</strong> (<code>{cam, mic}</code>, and a
+					<code>bye</code> on hang-up). The other side shows an avatar or a "Muted" badge instead of
+					guessing from a black frame. ICE state is watched too, because PeerJS doesn't always fire
+					<code>close</code> on the far end.</li>
+				<li><strong>Full duplex audio</strong> with the browser's echo cancellation, noise suppression
+					and auto gain. Headphones still beat a phone speaker held at arm's length.</li>
+				<li><strong>Strictly 1-to-1.</strong> A second caller is turned away while the line is busy. When
+					the call ends, the host keeps its code and waits for the next caller.</li>
+				<li>Adaptive bitrate and the wake lock run on both ends.</li>
+			</ul>
+			<h3>Camera ⇄ screen share</h3>
+			<p>
+				In the camera mode and in calls, the camera button opens a menu: <em>Camera</em>,
+				<em>Share screen</em>, <em>Turn video off</em>. Each choice is one
+				<code>replaceTrack()</code> on the existing video sender, so the call never drops.
+			</p>
+			<ul>
+				<li>Screen tracks come from <code>getDisplayMedia()</code> (1080p ideal, 15 fps) and get
+					<code>contentHint = "detail"</code>: under pressure the encoder drops frames, not
+					resolution, so text stays readable.</li>
+				<li>The adaptive bitrate never applies <code>scaleResolutionDownBy</code> to a screen.</li>
+				<li>The receiver is told (<code>{screen: true}</code> on the data channel) and switches to
+					<code>object-fit: contain</code>: a demo is shown whole, never cropped. The camera viewer
+					always uses <code>contain</code>.</li>
+				<li>The browser's own "Stop sharing" button fires <code>ended</code> on the track: BeamCam
+					goes back to whatever was on before (camera, or nothing).</li>
+				<li>Mobile browsers don't implement <code>getDisplayMedia()</code>; the option is shown
+					disabled there.</li>
+			</ul>
+		</section>
+
 		<section id="adaptive">
 			<h2>Adaptive bitrate: measured, not guessed</h2>
 			<p>
@@ -309,7 +355,7 @@ mic.enabled = pressed;              <span class="c">// on every press / release<
 				<table>
 					<tr><th>Path</th><th>Role</th></tr>
 					<tr><td><code>src/app.html</code></td><td>App markup (fragment; wrapped into <code>dist/app.html</code> by the build)</td></tr>
-					<tr><td><code>src/script.js</code></td><td>Everything: views, broadcaster, viewer, push-to-talk, adaptive bitrate, recorder, routing</td></tr>
+					<tr><td><code>src/script.js</code></td><td>Everything: views, broadcaster, viewer, calls, push-to-talk, filters, adaptive bitrate, recorder, routing</td></tr>
 					<tr><td><code>src/style.css</code></td><td>App styles</td></tr>
 					<tr><td><code>src/pages/</code></td><td>Landing page and this page, plus <code>src/site.css</code></td></tr>
 					<tr><td><code>bin/build.sh</code></td><td>Assembles <code>dist/</code>: HTML wrapper, manifest, copies. That's the whole build.</td></tr>
@@ -319,32 +365,38 @@ mic.enabled = pressed;              <span class="c">// on every press / release<
 			</div>
 			<p>
 				The app is a single page with four views toggled by an <code>active</code> class. URL hashes
-				drive entry points: <code>#camera</code>, <code>#viewer</code>, <code>#record</code>, or
-				<code>#cam-…</code> to connect straight away.
+				drive entry points: <code>#camera</code>, <code>#viewer</code>, <code>#record</code>,
+				<code>#videocall</code>, <code>#audiocall</code>, or <code>#cam-…</code> / <code>#call-…</code>
+				to connect straight away.
 			</p>
 		</section>
 
 		<section id="selfhost">
 			<h2>Self-hosting</h2>
-			<p>Three pieces, all boring on purpose:</p>
-<pre><span class="c"># 1. signaling server (Node, port 9000, localhost only)</span>
-cd server &amp;&amp; ./install.sh &amp;&amp; sudo ./install-service.sh
+			<p>Three pieces, all boring on purpose. Everything deployment-specific lives in one
+				<code>.env</code> file: name, domain, which apps are shown, TURN secret.</p>
+<pre><span class="c"># settings</span>
+cp .env.example .env              <span class="c"># APP_NAME, APP_DOMAIN, APP_LIVE / APP_VIDEOCALL / APP_AUDIOCALL / APP_EDITOR</span>
 
-<span class="c"># 2. STUN/TURN</span>
-sudo ./install-coturn.sh          <span class="c"># opens 3478 udp/tcp</span>
+<span class="c"># 1. signaling server + STUN/TURN</span>
+cd server
+./install.sh                      <span class="c"># npm dependencies</span>
+sudo ./install-coturn.sh          <span class="c"># coturn; writes TURN_SECRET into ../.env</span>
+sudo ./install-service.sh         <span class="c"># systemd unit for server.js</span>
 
-<span class="c"># 3. static files + proxy (Caddy does TLS for you)</span>
+<span class="c"># 2. static files: .env -> dist/config.js (public values only)</span>
 bash bin/build.sh
-<span class="c"># Caddyfile</span>
+
+<span class="c"># 3. proxy (Caddy does TLS for you)</span>
 your.domain {
     root * /path/to/dist
     file_server
-    reverse_proxy /peerjs/* localhost:9000
+    reverse_proxy /peerjs/* 127.0.0.1:9000
 }</pre>
 			<p>
-				Then point the <code>host</code> and <code>iceServers</code> in <code>src/script.js</code> at your
-				domain. Run it on a box inside your house and you get a LAN-only setup: signaling,
-				media and TURN never leave your network.
+				The build copies only a whitelist of public values into the page: the TURN secret never
+				reaches <code>dist/</code>. Run it on a box inside your house and you get a LAN-only setup:
+				signaling, media and TURN never leave your network.
 			</p>
 		</section>
 
@@ -358,8 +410,8 @@ your.domain {
 					Use OBS's Virtual Camera.</li>
 				<li><strong>Service Worker disabled.</strong> An earlier one intercepted the signaling
 					WebSocket. It's unregistered on load. No offline install for now.</li>
-				<li><strong>Single viewer by design.</strong> The camera answers each call, but UI, talk-back
-					and bitrate logic follow the latest call only.</li>
+				<li><strong>One to one by design.</strong> One viewer per camera, two people per call. No group
+					calls: that would need an SFU, which means a media server. That's a different product.</li>
 			</ul>
 		</section>
 

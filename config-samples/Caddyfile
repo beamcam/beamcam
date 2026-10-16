@@ -1,24 +1,24 @@
-# Caddy configuration for PeerJS Server
-# Add this to your beamcam.live Caddyfile
+# Caddy: static app + signaling proxy. Replace cam.example.org with your
+# APP_DOMAIN and the root with the absolute path of dist/.
+# Caddy fetches and renews the TLS certificate by itself.
 
-beamcam.live {
-    # Your existing config...
+cam.example.org {
+    root * /srv/cam/dist
+    file_server
 
-    # PeerJS Server proxy
-    reverse_proxy /peerjs/* localhost:9000 {
-        # WebSocket support (automatic in Caddy)
-
-        # Headers for proxied requests
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
+    # Signaling server (HTTP + WebSocket)
+    @signaling path /peerjs /peerjs/*
+    reverse_proxy @signaling 127.0.0.1:9000 {
         header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-
-        # Long timeouts for WebRTC signaling
         transport http {
             read_timeout 7d
             write_timeout 7d
-            dial_timeout 30s
         }
+    }
+
+    header {
+        Permissions-Policy "camera=(self), microphone=(self), display-capture=(self), screen-wake-lock=(self)"
+        Referrer-Policy "no-referrer"
+        X-Content-Type-Options "nosniff"
     }
 }

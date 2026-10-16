@@ -8,13 +8,14 @@ build/
 *.log
 
 # Environment variables
+.*
 .env
 .env.local
 .env.*.local
 *.env
 
 # Secrets and keys
-*.md
+docs/*.md
 server/.turn-secret
 .turn-secret
 *.key

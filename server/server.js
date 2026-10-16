@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * PeerJS Server for BeamCam
- * Signaling for WebRTC peer-to-peer connections (official `peer` package),
+ * Signaling server: WebRTC peer-to-peer connections (official `peer` package),
  * plus a TURN credential endpoint so the coturn secret never reaches clients.
+ *
+ * Settings come from the environment, or from the repository's .env file
+ * (real environment variables win).
  */
 
 const fs = require('fs');
@@ -13,16 +15,40 @@ const crypto = require('crypto');
 const express = require('express');
 const { ExpressPeerServer } = require('peer');
 
-const PORT = process.env.PORT || 9000;
-const HOST = process.env.HOST || '127.0.0.1';
-const PATH = process.env.PATH_PREFIX || '/';
+// Minimal .env reader (KEY=VALUE lines): no dependency, never overrides the
+// real environment
+function loadEnv(file) {
+  if (!fs.existsSync(file)) return;
+  for (const raw of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const m = raw.match(/^\s*([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (!m || m[1] in process.env) continue;
+    let val = m[2].replace(/\s+#.*$/, '').trim();
+    if (/^(["']).*\1$/.test(val)) val = val.slice(1, -1);
+    process.env[m[1]] = val;
+  }
+}
+loadEnv(path.join(__dirname, '..', '.env'));
+loadEnv(path.join(__dirname, '.env'));
+
+const env = (key, fallback) => process.env[key] || fallback;
+
+const APP_DOMAIN = env('APP_DOMAIN', 'localhost');
+const PORT = env('PORT', 9000);
+const HOST = env('HOST', '127.0.0.1');
+const PATH = env('PATH_PREFIX', env('SIGNALING_PATH', '/'));
 
 // coturn `use-auth-secret` / `static-auth-secret` (TURN REST API credentials)
-const TURN_SECRET_FILE = process.env.TURN_SECRET_FILE || path.join(__dirname, '.turn-secret');
-const TURN_SECRET = (process.env.TURN_SECRET || fs.readFileSync(TURN_SECRET_FILE, 'utf8')).trim();
-const TURN_HOST = process.env.TURN_HOST || 'beamcam.live';
-const TURN_TTL = parseInt(process.env.TURN_TTL || '86400', 10); // covers a night-long session
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://beamcam.live').split(',');
+const TURN_SECRET_FILE = env('TURN_SECRET_FILE', path.join(__dirname, '.turn-secret'));
+const TURN_SECRET = (process.env.TURN_SECRET ||
+  (fs.existsSync(TURN_SECRET_FILE) ? fs.readFileSync(TURN_SECRET_FILE, 'utf8') : '')).trim();
+if (!TURN_SECRET) {
+  console.error('TURN_SECRET is not set (in .env, the environment, or TURN_SECRET_FILE). Refusing to start.');
+  process.exit(1);
+}
+const TURN_HOST = env('TURN_HOST', APP_DOMAIN);
+const TURN_PORT = env('TURN_PORT', 3478);
+const TURN_TTL = parseInt(env('TURN_TTL', '86400'), 10); // covers a night-long session
+const ALLOWED_ORIGINS = env('ALLOWED_ORIGINS', `https://${APP_DOMAIN}`).split(',').map((o) => o.trim());
 
 const app = express();
 app.set('trust proxy', true);
@@ -52,17 +78,17 @@ app.get(path.posix.join(PATH, 'turn'), (req, res) => {
   }
 
   // username = expiry timestamp, password = base64(HMAC-SHA1(secret, username))
-  const username = `${Math.floor(Date.now() / 1000) + TURN_TTL}:beamcam`;
+  const username = `${Math.floor(Date.now() / 1000) + TURN_TTL}:user`;
   const credential = crypto.createHmac('sha1', TURN_SECRET).update(username).digest('base64');
 
   res.json({
     ttl: TURN_TTL,
     iceServers: [
-      { urls: `stun:${TURN_HOST}:3478` },
+      { urls: `stun:${TURN_HOST}:${TURN_PORT}` },
       {
         urls: [
-          `turn:${TURN_HOST}:3478?transport=udp`,
-          `turn:${TURN_HOST}:3478?transport=tcp`
+          `turn:${TURN_HOST}:${TURN_PORT}?transport=udp`,
+          `turn:${TURN_HOST}:${TURN_PORT}?transport=tcp`
         ],
         username,
         credential
@@ -88,5 +114,5 @@ peerServer.on('disconnect', (client) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`BeamCam PeerJS server listening on ${HOST}:${PORT}, path ${PATH}, TURN credentials at ${path.posix.join(PATH, 'turn')}`);
+  console.log(`Signaling server listening on ${HOST}:${PORT}, path ${PATH}, TURN credentials at ${path.posix.join(PATH, 'turn')}`);
 });
