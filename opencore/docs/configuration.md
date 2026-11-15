@@ -29,6 +29,7 @@ optional quotes.
 | `APP_DOMAIN` | build, server | required | Public hostname. Default for every other host |
 | `APP_THEME_COLOR` | build | `#6366f1` | PWA theme colour |
 | `APP_HOME_URL` | build | `./` | Where the header logo links |
+| `APP_ABOUT_URL` | build | `APP_HOME_URL` | Where the status light (top right) links |
 | `APP_LIVE` | build | off | Phone camera + viewer tiles |
 | `APP_VIDEOCALL` | build | off | 1-to-1 video call tile (and the camera button inside calls) |
 | `APP_AUDIOCALL` | build | off | 1-to-1 audio call tile |

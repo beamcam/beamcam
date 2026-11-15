@@ -6,18 +6,25 @@
 	<title>BeamCam: your phone is the camera</title>
 	<meta name="description" content="Turn any phone into a live camera you can watch from any browser. Baby monitor, walkie-talkie, webcam, second angle, pet cam. No app, no account, no cloud. Peer-to-peer, open source.">
 	<meta name="theme-color" content="#050505">
-	<link rel="manifest" href="./manifest.json">
-	<link rel="icon" href="./favicon.ico">
+	<link rel="manifest" href="../manifest.json">
+	<link rel="icon" href="../favicon.ico" sizes="32x32">
+	<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+	<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+	<link rel="alternate" hreflang="en" href="https://beamcam.live/about/">
+	<link rel="alternate" hreflang="fr" href="https://beamcam.live/a-propos/">
+	<link rel="alternate" hreflang="x-default" href="https://beamcam.live/about/">
 	<meta property="og:title" content="BeamCam: your phone is the camera">
 	<meta property="og:description" content="Scan a QR code and you're live. No app, no account, no cloud. Peer-to-peer video in the browser.">
-	<meta property="og:url" content="https://beamcam.live/">
+	<meta property="og:url" content="https://beamcam.live/about/">
 	<meta property="og:type" content="website">
-	<script>
-		// Old share links / QR codes pointed at /#cam-xxxx: hand them to the app
-		if (/^#cam-[a-z0-9]{4,16}$/i.test(location.hash)) location.replace("./app.html" + location.hash);
-	</script>
-	<link rel="stylesheet" href="./site.css">
-	<script src="./assets/lucide.min.js" defer></script>
+	<meta property="og:locale" content="en_US">
+	<meta property="og:image" content="https://beamcam.live/og-image.jpg">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="A phone showing a pairing QR code streams live video straight to a laptop">
+	<meta name="twitter:card" content="summary_large_image">
+	<link rel="stylesheet" href="../site.css">
+	<script src="../assets/lucide.min.js" defer></script>
 </head>
 <body>
 
@@ -30,9 +37,10 @@
 		<div class="nav-links">
 			<a class="hide-sm" href="#uses">Uses</a>
 			<a class="hide-sm" href="#how">How it works</a>
-			<a class="hide-sm" href="./tech.html">Under the hood</a>
+			<a class="hide-sm" href="../tech.html">Under the hood</a>
 			<a class="hide-sm" href="https://github.com/beamcam/beamcam">GitHub</a>
-			<a class="btn primary small" href="./app.html">Open the app</a>
+			<a class="lang-switch" href="../a-propos/" hreflang="fr" lang="fr" title="Français">FR</a>
+			<a class="btn primary small" href="../">Open the app</a>
 		</div>
 	</div>
 </nav>
@@ -49,8 +57,8 @@
 			</p>
 			<p class="kicker">open source · peer-to-peer · in your browser</p>
 			<div class="cta-row">
-				<a class="btn primary" href="./app.html#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
-				<a class="btn" href="./app.html#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
+				<a class="btn primary" href="../#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
+				<a class="btn" href="../#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
 			</div>
 			<div class="no-list">
 				<span>app store</span><span>account</span><span>cloud upload</span><span>subscription</span><span>trackers</span>
@@ -101,7 +109,7 @@
 			<!-- server, out of the media path -->
 			<g opacity="0.75">
 				<rect x="74" y="24" width="120" height="34" rx="8" fill="none" stroke="#3a3a48" stroke-dasharray="4 4"/>
-				<text x="134" y="45" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#9a9aa8">handshake only</text>
+				<text x="134" y="45" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#b8b8c4">handshake only</text>
 				<path d="M100 58 L 82 126" stroke="#3a3a48" stroke-dasharray="3 4"/>
 				<path d="M176 58 L 236 84" stroke="#3a3a48" stroke-dasharray="3 4"/>
 			</g>
@@ -115,7 +123,7 @@
 		<h2>Four modes. One page. That's it.</h2>
 		<p class="lede">Open beamcam.live on two devices. One films and the other watches, or you call each other. Or skip the network entirely and record what's in front of you.</p>
 
-		<div class="grid c2" style="margin-top:40px">
+		<div class="grid c1" style="margin-top:40px">
 			<div class="card mode-card">
 				<div class="ico"><i data-lucide="smartphone"></i></div>
 				<h3>Phone Camera</h3>
@@ -129,7 +137,7 @@
 					<li>Focus &amp; exposure lock (when the hardware allows)</li>
 					<li>Screen stays awake while streaming</li>
 				</ul>
-				<a class="go" href="./app.html#camera">Start filming →</a>
+				<a class="go" href="../#camera">Start filming →</a>
 			</div>
 			<div class="card mode-card">
 				<div class="ico green"><i data-lucide="monitor"></i></div>
@@ -141,7 +149,7 @@
 					<li>Fullscreen, one tap</li>
 					<li>Works across networks, not just the same Wi-Fi</li>
 				</ul>
-				<a class="go" href="./app.html#viewer">Watch a camera →</a>
+				<a class="go" href="../#viewer">Watch a camera →</a>
 			</div>
 			<div class="card mode-card">
 				<div class="ico amber"><i data-lucide="circle-dot"></i></div>
@@ -153,7 +161,7 @@
 					<li>Download or discard. No upload, ever.</li>
 					<li>Works offline once the page is loaded</li>
 				</ul>
-				<a class="go" href="./app.html#record">Start recording →</a>
+				<a class="go" href="../#record">Start recording →</a>
 			</div>
 			<div class="card mode-card">
 				<div class="ico"><i data-lucide="phone-call"></i></div>
@@ -166,8 +174,8 @@
 					<li>The other side sees an avatar, not a frozen black frame</li>
 					<li>Same P2P encryption, same adaptive quality</li>
 				</ul>
-				<a class="go" href="./app.html#videocall">Start a video call →</a>
-				<a class="go" href="./app.html#audiocall" style="padding-top:8px">Start an audio call →</a>
+				<a class="go" href="../#videocall">Start a video call →</a>
+				<a class="go" href="../#audiocall" style="padding-top:8px">Start an audio call →</a>
 			</div>
 		</div>
 	</div>
@@ -349,7 +357,7 @@
 		</details>
 		<details>
 			<summary>Can I run it on my own server?</summary>
-			<p>Yes. It's a static page, a PeerJS signaling server and coturn. The scripts are in the repo. See <a href="./tech.html#selfhost">Under the hood → Self-hosting</a>.</p>
+			<p>Yes. It's a static page, a PeerJS signaling server and coturn. The scripts are in the repo. See <a href="../tech.html#selfhost">Under the hood → Self-hosting</a>.</p>
 		</details>
 	</div>
 </section>
@@ -360,10 +368,10 @@
 		<h2>Find that old phone in the drawer and put it to work.</h2>
 		<p class="lede">Ten seconds from now it could be a camera.</p>
 		<div class="cta-row">
-			<a class="btn primary" href="./app.html#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
-			<a class="btn" href="./app.html#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
-			<a class="btn" href="./app.html#videocall"><i data-lucide="phone-call"></i> Start a call</a>
-			<a class="btn" href="./app.html#record"><i data-lucide="circle-dot"></i> Record locally</a>
+			<a class="btn primary" href="../#camera"><i data-lucide="smartphone"></i> Make this device a camera</a>
+			<a class="btn" href="../#viewer"><i data-lucide="monitor"></i> Watch a camera</a>
+			<a class="btn" href="../#videocall"><i data-lucide="phone-call"></i> Start a call</a>
+			<a class="btn" href="../#record"><i data-lucide="circle-dot"></i> Record locally</a>
 		</div>
 	</div>
 </section>
@@ -371,15 +379,31 @@
 <footer>
 	<div class="wrap">
 		<a class="brand" href="./" style="font-size:1rem">BeamCam</a>
-		<a href="./app.html">App</a>
-		<a href="./tech.html">Under the hood</a>
+		<a href="../">App</a>
+		<a href="../tech.html">Under the hood</a>
 		<a href="https://github.com/beamcam/beamcam">GitHub</a>
+		<a href="../a-propos/" hreflang="fr" lang="fr">Français</a>
 		<span class="sp">MIT licence · © 2026 L3DLP</span>
 	</div>
 </footer>
 
 <script>
 	window.addEventListener("load", () => window.lucide && lucide.createIcons());
+</script>
+<script>
+	// The mode used last in the app (the app's home_pick cookie) gets the same halo as there
+	(function () {
+		var m = document.cookie.match(/(?:^|; )home_pick=(\w+)/);
+		var hash = m && { film: "camera", watch: "viewer", video: "videocall", audio: "audiocall", record: "record" }[m[1]];
+		var link = hash && document.querySelector('.mode-card a.go[href$="#' + hash + '"]');
+		if (!link) return;
+		var card = link.closest(".card"), note = document.createElement("span");
+		note.className = "pref-note";
+		note.setAttribute("aria-hidden", "true");
+		note.textContent = "your usual";
+		card.classList.add("is-pref");
+		card.appendChild(note);
+	})();
 </script>
 </body>
 </html>

@@ -6,22 +6,38 @@
 	<title>Under the hood · BeamCam</title>
 	<meta name="description" content="How BeamCam is built: WebRTC peer-to-peer video, PeerJS signaling, STUN/TURN NAT traversal, adaptive bitrate, push-to-talk, MediaRecorder. No framework, no build step, no third parties.">
 	<meta name="theme-color" content="#050505">
-	<link rel="icon" href="./favicon.ico">
+	<link rel="icon" href="./favicon.ico" sizes="32x32">
+	<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+	<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+	<link rel="alternate" hreflang="en" href="https://beamcam.live/tech.html">
+	<link rel="alternate" hreflang="fr" href="https://beamcam.live/technique.html">
+	<link rel="alternate" hreflang="x-default" href="https://beamcam.live/tech.html">
+	<meta property="og:title" content="Under the hood · BeamCam">
+	<meta property="og:description" content="How BeamCam is built: peer-to-peer WebRTC, a tiny signaling server, STUN/TURN. No framework, no third parties.">
+	<meta property="og:url" content="https://beamcam.live/tech.html">
+	<meta property="og:type" content="article">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:image" content="https://beamcam.live/og-image.jpg">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="A phone showing a pairing QR code streams live video straight to a laptop">
+	<meta name="twitter:card" content="summary_large_image">
 	<link rel="stylesheet" href="./site.css">
 </head>
 <body>
 
 <nav class="nav">
 	<div class="wrap">
-		<a class="brand" href="./">
+		<a class="brand" href="./about/">
 			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
 			BeamCam
 		</a>
 		<div class="nav-links">
-			<a class="hide-sm" href="./#uses">Uses</a>
+			<a class="hide-sm" href="./about/#uses">Uses</a>
 			<a class="hide-sm" href="./tech.html" aria-current="page">Under the hood</a>
 			<a class="hide-sm" href="https://github.com/beamcam/beamcam">GitHub</a>
-			<a class="btn primary small" href="./app.html">Open the app</a>
+			<a class="lang-switch" href="./technique.html" hreflang="fr" lang="fr" title="Français">FR</a>
+			<a class="btn primary small" href="./">Open the app</a>
 		</div>
 	</div>
 </nav>
@@ -79,7 +95,7 @@
 					<defs>
 						<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#818cf8"/></marker>
 						<marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#10b981"/></marker>
-						<marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9a9aa8"/></marker>
+						<marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b8b8c4"/></marker>
 					</defs>
 					<g font-family="ui-monospace,monospace" font-size="12">
 						<!-- server box -->
@@ -87,25 +103,25 @@
 						<text x="380" y="36" text-anchor="middle" fill="#f4f4f6" font-weight="700" font-size="13">beamcam.live</text>
 						<rect x="246" y="48" width="130" height="68" rx="8" fill="#0b0b10" stroke="#3a3a48"/>
 						<text x="311" y="72" text-anchor="middle" fill="#c7d2fe">Caddy :443</text>
-						<text x="311" y="90" text-anchor="middle" fill="#9a9aa8" font-size="10.5">static files</text>
-						<text x="311" y="105" text-anchor="middle" fill="#9a9aa8" font-size="10.5">/peerjs → :9000</text>
+						<text x="311" y="90" text-anchor="middle" fill="#b8b8c4" font-size="10.5">static files</text>
+						<text x="311" y="105" text-anchor="middle" fill="#b8b8c4" font-size="10.5">/peerjs → :9000</text>
 						<rect x="388" y="48" width="130" height="68" rx="8" fill="#0b0b10" stroke="#3a3a48"/>
 						<text x="453" y="72" text-anchor="middle" fill="#a7f3d0">coturn :3478</text>
-						<text x="453" y="90" text-anchor="middle" fill="#9a9aa8" font-size="10.5">STUN: public IP</text>
-						<text x="453" y="105" text-anchor="middle" fill="#9a9aa8" font-size="10.5">TURN: relay</text>
+						<text x="453" y="90" text-anchor="middle" fill="#b8b8c4" font-size="10.5">STUN: public IP</text>
+						<text x="453" y="105" text-anchor="middle" fill="#b8b8c4" font-size="10.5">TURN: relay</text>
 
 						<!-- devices -->
 						<rect x="20" y="200" width="200" height="110" rx="14" fill="#121218" stroke="#6366f1"/>
 						<text x="120" y="228" text-anchor="middle" fill="#f4f4f6" font-weight="700" font-size="13">Camera phone</text>
-						<text x="120" y="250" text-anchor="middle" fill="#9a9aa8" font-size="11">getUserMedia → stream</text>
-						<text x="120" y="268" text-anchor="middle" fill="#9a9aa8" font-size="11">peer id: cam-xxxxxxxx</text>
-						<text x="120" y="286" text-anchor="middle" fill="#9a9aa8" font-size="11">answers calls</text>
+						<text x="120" y="250" text-anchor="middle" fill="#b8b8c4" font-size="11">getUserMedia → stream</text>
+						<text x="120" y="268" text-anchor="middle" fill="#b8b8c4" font-size="11">peer id: cam-xxxxxxxx</text>
+						<text x="120" y="286" text-anchor="middle" fill="#b8b8c4" font-size="11">answers calls</text>
 
 						<rect x="540" y="200" width="200" height="110" rx="14" fill="#121218" stroke="#10b981"/>
 						<text x="640" y="228" text-anchor="middle" fill="#f4f4f6" font-weight="700" font-size="13">Viewer</text>
-						<text x="640" y="250" text-anchor="middle" fill="#9a9aa8" font-size="11">random peer id</text>
-						<text x="640" y="268" text-anchor="middle" fill="#9a9aa8" font-size="11">calls cam-xxxxxxxx</text>
-						<text x="640" y="286" text-anchor="middle" fill="#9a9aa8" font-size="11">plays remote stream</text>
+						<text x="640" y="250" text-anchor="middle" fill="#b8b8c4" font-size="11">random peer id</text>
+						<text x="640" y="268" text-anchor="middle" fill="#b8b8c4" font-size="11">calls cam-xxxxxxxx</text>
+						<text x="640" y="286" text-anchor="middle" fill="#b8b8c4" font-size="11">plays remote stream</text>
 
 						<!-- signaling -->
 						<path d="M110 198 L 290 120" stroke="#818cf8" stroke-dasharray="5 5" fill="none" marker-end="url(#ah)" marker-start="url(#ah)"/>
@@ -114,18 +130,18 @@
 						<text x="548" y="150" fill="#818cf8" font-size="11">WSS: SDP + ICE</text>
 
 						<!-- stun probes -->
-						<path d="M180 198 L 420 120" stroke="#9a9aa8" stroke-dasharray="2 4" fill="none" marker-end="url(#am)"/>
-						<path d="M590 198 L 480 120" stroke="#9a9aa8" stroke-dasharray="2 4" fill="none" marker-end="url(#am)"/>
+						<path d="M180 198 L 420 120" stroke="#b8b8c4" stroke-dasharray="2 4" fill="none" marker-end="url(#am)"/>
+						<path d="M590 198 L 480 120" stroke="#b8b8c4" stroke-dasharray="2 4" fill="none" marker-end="url(#am)"/>
 
 						<!-- media -->
 						<path d="M224 255 L 536 255" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#ag)" marker-start="url(#ag)"/>
 						<text x="380" y="244" text-anchor="middle" fill="#10b981" font-weight="700">media: P2P, DTLS-SRTP</text>
-						<text x="380" y="276" text-anchor="middle" fill="#9a9aa8" font-size="11">video + audio →  ·  ← talk-back audio</text>
+						<text x="380" y="276" text-anchor="middle" fill="#b8b8c4" font-size="11">video + audio →  ·  ← talk-back audio</text>
 					</g>
 				</svg>
 			</div>
 			<p>
-				The site itself is static: <code>index.html</code> (this landing page), <code>app.html</code>,
+				The site itself is static: <code>index.html</code> (the app), <code>about/</code> (the landing page),
 				<code>tech.html</code>, one script and two stylesheets. Caddy serves the files and proxies
 				<code>/peerjs/*</code> (HTTP + WebSocket) to the PeerJS server on <code>127.0.0.1:9000</code>.
 				The PeerJS server runs with <code>allow_discovery: false</code>, so nobody can list the cameras
@@ -139,7 +155,7 @@
 				<li><strong>Camera phone</strong> generates a peer id from <code>crypto.getRandomValues</code>
 					(8 random bytes, rendered as <code>cam-</code> + 12 base-36 characters), registers it
 					with the signaling server and shows it as text and as a QR code of
-					<code>https://beamcam.live/app.html#cam-…</code>.</li>
+					<code>https://beamcam.live/#cam-…</code>.</li>
 				<li><strong>Viewer</strong> opens with an anonymous id. A <code>#cam-…</code> hash in the URL
 					(from the QR code) is queued and dialled as soon as the peer is open, so you don't race a timer.</li>
 				<li>The viewer <strong>calls</strong> the camera with a placeholder stream: a 1 fps black
@@ -354,7 +370,7 @@ mic.enabled = pressed;              <span class="c">// on every press / release<
 			<div class="table-wrap">
 				<table>
 					<tr><th>Path</th><th>Role</th></tr>
-					<tr><td><code>src/app.html</code></td><td>App markup (fragment; wrapped into <code>dist/app.html</code> by the build)</td></tr>
+					<tr><td><code>src/app.html</code></td><td>App markup (fragment; wrapped into <code>dist/index.html</code> by the build)</td></tr>
 					<tr><td><code>src/script.js</code></td><td>Everything: views, broadcaster, viewer, calls, push-to-talk, filters, adaptive bitrate, recorder, routing</td></tr>
 					<tr><td><code>src/style.css</code></td><td>App styles</td></tr>
 					<tr><td><code>src/pages/</code></td><td>Landing page and this page, plus <code>src/site.css</code></td></tr>
@@ -429,10 +445,11 @@ your.domain {
 
 <footer>
 	<div class="wrap">
-		<a class="brand" href="./" style="font-size:1rem">BeamCam</a>
-		<a href="./app.html">App</a>
-		<a href="./">Home</a>
+		<a class="brand" href="./about/" style="font-size:1rem">BeamCam</a>
+		<a href="./">App</a>
+		<a href="./about/">About</a>
 		<a href="https://github.com/beamcam/beamcam">GitHub</a>
+		<a href="./technique.html" hreflang="fr" lang="fr">Français</a>
 		<span class="sp">MIT licence · © 2026 L3DLP</span>
 	</div>
 </footer>

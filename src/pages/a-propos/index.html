@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>BeamCam&nbsp;: votre téléphone est la caméra</title>
+	<meta name="description" content="Transformez n’importe quel téléphone en caméra en direct, visible depuis n’importe quel navigateur. Babyphone, talkie-walkie, webcam, deuxième angle, caméra pour animaux. Sans appli, sans compte, sans cloud. Pair-à-pair et open source.">
+	<meta name="theme-color" content="#050505">
+	<link rel="manifest" href="../manifest.json">
+	<link rel="icon" href="../favicon.ico" sizes="32x32">
+	<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+	<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+	<link rel="alternate" hreflang="en" href="https://beamcam.live/about/">
+	<link rel="alternate" hreflang="fr" href="https://beamcam.live/a-propos/">
+	<link rel="alternate" hreflang="x-default" href="https://beamcam.live/about/">
+	<meta property="og:title" content="BeamCam&nbsp;: votre téléphone est la caméra">
+	<meta property="og:description" content="Scannez un QR code et c’est parti. Sans appli, sans compte, sans cloud. De la vidéo pair-à-pair, directement dans le navigateur.">
+	<meta property="og:url" content="https://beamcam.live/a-propos/">
+	<meta property="og:type" content="website">
+	<meta property="og:locale" content="fr_FR">
+	<meta property="og:locale:alternate" content="en_US">
+	<meta property="og:image" content="https://beamcam.live/og-image.jpg">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="Un téléphone affichant un QR code d’appairage diffuse la vidéo en direct vers un ordinateur portable">
+	<meta name="twitter:card" content="summary_large_image">
+	<link rel="stylesheet" href="../site.css">
+	<script src="../assets/lucide.min.js" defer></script>
+</head>
+<body>
+
+<nav class="nav">
+	<div class="wrap">
+		<a class="brand" href="./">
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+			BeamCam
+		</a>
+		<div class="nav-links">
+			<a class="hide-sm" href="#uses">Usages</a>
+			<a class="hide-sm" href="#how">Comment ça marche</a>
+			<a class="hide-sm" href="../technique.html">Sous le capot</a>
+			<a class="hide-sm" href="https://github.com/beamcam/beamcam">GitHub</a>
+			<a class="lang-switch" href="../about/" hreflang="en" lang="en" title="English">EN</a>
+			<a class="btn primary small" href="../">Ouvrir l’appli</a>
+		</div>
+	</div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+	<div class="wrap hero-grid">
+		<div>
+			<h1>La meilleure caméra que vous ayez <span class="grad">dort au fond d’un tiroir.</span></h1>
+			<p class="lede">
+				BeamCam transforme n’importe quel téléphone en <strong>caméra en direct, visible depuis n’importe quel autre écran</strong>.
+				Babyphone, talkie-walkie, webcam, angle supplémentaire. Ouvrez une page, scannez un QR code, et la
+				vidéo passe <strong>directement d’un appareil à l’autre</strong>. Elle ne transite jamais par nos serveurs.
+			</p>
+			<p class="kicker">open source · pair-à-pair · dans votre navigateur</p>
+			<div class="cta-row">
+				<a class="btn primary" href="../#camera"><i data-lucide="smartphone"></i> Faire de cet appareil une caméra</a>
+				<a class="btn" href="../#viewer"><i data-lucide="monitor"></i> Regarder une caméra</a>
+			</div>
+			<div class="no-list">
+				<span>store d’applis</span><span>compte</span><span>envoi dans le cloud</span><span>abonnement</span><span>traceurs</span>
+			</div>
+		</div>
+
+		<svg class="hero-art" viewBox="0 0 520 400" role="img" aria-label="Un téléphone diffuse la vidéo directement vers un ordinateur portable">
+			<defs>
+				<linearGradient id="beam" x1="0" x2="1">
+					<stop offset="0" stop-color="#6366f1" stop-opacity="0.9"/>
+					<stop offset="1" stop-color="#10b981" stop-opacity="0.9"/>
+				</linearGradient>
+				<linearGradient id="scr" x1="0" y1="0" x2="1" y2="1">
+					<stop offset="0" stop-color="#1e1b4b"/>
+					<stop offset="1" stop-color="#0b1720"/>
+				</linearGradient>
+			</defs>
+			<!-- laptop -->
+			<rect x="196" y="70" width="300" height="196" rx="14" fill="#111117" stroke="#2a2a35" stroke-width="2"/>
+			<rect x="210" y="84" width="272" height="168" rx="6" fill="url(#scr)"/>
+			<circle cx="346" cy="160" r="30" fill="#6366f1" opacity="0.18"/>
+			<path d="M332 176c0-14 6-24 14-24s14 10 14 24" stroke="#a5b4fc" stroke-width="3" fill="none" stroke-linecap="round"/>
+			<circle cx="346" cy="140" r="9" fill="#a5b4fc"/>
+			<rect x="222" y="96" width="46" height="16" rx="8" fill="#ef4444" opacity="0.9"/>
+			<text x="245" y="108" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#fff" font-weight="700">LIVE</text>
+			<rect x="400" y="226" width="70" height="16" rx="8" fill="#10b981" opacity="0.18"/>
+			<text x="435" y="238" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#6ee7b7">P2P · 1.5M</text>
+			<path d="M176 266h340l-14 18H190z" fill="#1a1a22" stroke="#2a2a35" stroke-width="2"/>
+			<!-- beam -->
+			<path d="M118 214 C 160 214, 170 168, 208 168" stroke="url(#beam)" stroke-width="3" fill="none" stroke-dasharray="6 7">
+				<animate attributeName="stroke-dashoffset" from="26" to="0" dur="0.8s" repeatCount="indefinite"/>
+			</path>
+			<!-- phone -->
+			<g transform="rotate(-8 74 230)">
+				<rect x="28" y="122" width="96" height="190" rx="18" fill="#111117" stroke="#3a3a48" stroke-width="2"/>
+				<rect x="36" y="134" width="80" height="166" rx="10" fill="#0c0c12"/>
+				<rect x="46" y="150" width="60" height="60" rx="4" fill="#fff"/>
+				<g fill="#111">
+					<rect x="50" y="154" width="16" height="16"/><rect x="86" y="154" width="16" height="16"/><rect x="50" y="190" width="16" height="16"/>
+					<rect x="72" y="160" width="6" height="6"/><rect x="72" y="176" width="10" height="6"/><rect x="88" y="182" width="6" height="10"/>
+					<rect x="74" y="196" width="6" height="6"/><rect x="88" y="198" width="12" height="6"/>
+				</g>
+				<rect x="44" y="222" width="64" height="16" rx="5" fill="#1e1b4b"/>
+				<text x="76" y="234" text-anchor="middle" font-family="ui-monospace,monospace" font-size="8.5" fill="#a5b4fc">cam-4k2x9q…</text>
+				<circle cx="76" cy="272" r="13" fill="none" stroke="#3a3a48" stroke-width="2"/>
+				<circle cx="76" cy="272" r="6" fill="#ef4444"/>
+			</g>
+			<!-- server, out of the media path -->
+			<g opacity="0.75">
+				<rect x="74" y="24" width="120" height="34" rx="8" fill="none" stroke="#3a3a48" stroke-dasharray="4 4"/>
+				<text x="134" y="45" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#b8b8c4">mise en relation</text>
+				<path d="M100 58 L 82 126" stroke="#3a3a48" stroke-dasharray="3 4"/>
+				<path d="M176 58 L 236 84" stroke="#3a3a48" stroke-dasharray="3 4"/>
+			</g>
+		</svg>
+	</div>
+</header>
+
+<!-- ============ MODES ============ -->
+<section id="modes">
+	<div class="wrap">
+		<h2>Quatre modes. Une page. C’est tout.</h2>
+		<p class="lede">Ouvrez beamcam.live sur deux appareils. L’un filme, l’autre regarde, ou bien vous vous appelez. Ou alors, oubliez le réseau et enregistrez simplement ce que vous avez sous les yeux.</p>
+
+		<div class="grid c1" style="margin-top:40px">
+			<div class="card mode-card">
+				<div class="ico"><i data-lucide="smartphone"></i></div>
+				<h3>Caméra téléphone</h3>
+				<p>Cet appareil filme. Il affiche un QR code et un code d’appairage, et décroche dès que quelqu’un se connecte.</p>
+				<ul>
+					<li>Caméra avant / arrière, bascule en direct</li>
+					<li><strong>Caméra ⇄ partage d’écran</strong> depuis le bouton caméra, en pleine diffusion</li>
+					<li>Débit adaptatif, ou forcé de 0,5 à 5&nbsp;Mbit/s</li>
+					<li>15 / 24 / 30 / 60&nbsp;i/s</li>
+					<li>Luminosité, contraste et niveaux de gris, appliqués à l’image envoyée</li>
+					<li>Verrouillage de la mise au point et de l’exposition (si le matériel le permet)</li>
+					<li>L’écran reste allumé pendant la diffusion</li>
+				</ul>
+				<a class="go" href="../#camera">Commencer à filmer →</a>
+			</div>
+			<div class="card mode-card">
+				<div class="ico green"><i data-lucide="monitor"></i></div>
+				<h3>Visionneuse</h3>
+				<p>N’importe quel écran peut regarder&nbsp;: ordinateur, tablette, autre téléphone. Scannez le QR code ou tapez le code d’appairage.</p>
+				<ul>
+					<li>Vidéo + son en direct</li>
+					<li><strong>Maintenir pour parler</strong>&nbsp;: votre voix sort du téléphone-caméra</li>
+					<li>Plein écran, d’un geste</li>
+					<li>Fonctionne d’un réseau à l’autre, pas seulement sur le même Wi-Fi</li>
+				</ul>
+				<a class="go" href="../#viewer">Regarder une caméra →</a>
+			</div>
+			<div class="card mode-card">
+				<div class="ico amber"><i data-lucide="circle-dot"></i></div>
+				<h3>Enregistreur local</h3>
+				<p>Enregistrez votre caméra ou votre écran, avec le son, directement dans un fichier. Rien ne quitte l’appareil.</p>
+				<ul>
+					<li>Caméra ou capture d’écran, jusqu’en 1080p</li>
+					<li>WebM / VP9, à revoir avant de le garder</li>
+					<li>Téléchargez ou jetez. Aucun envoi, jamais.</li>
+					<li>Fonctionne hors ligne une fois la page chargée</li>
+				</ul>
+				<a class="go" href="../#record">Lancer un enregistrement →</a>
+			</div>
+			<div class="card mode-card">
+				<div class="ico"><i data-lucide="phone-call"></i></div>
+				<h3>Appel en tête-à-tête</h3>
+				<p>Vidéo ou audio, dans les deux sens. Partagez un QR code ou un lien&nbsp;: votre interlocuteur choisit «&nbsp;avec vidéo&nbsp;» ou «&nbsp;audio seul&nbsp;», et vous voilà en ligne.</p>
+				<ul>
+					<li>Caméra, <strong>partage d’écran</strong> ou rien, à changer en plein appel. Coupée, c’est coupée&nbsp;: débit nul, caméra libérée.</li>
+					<li>Les écrans partagés arrivent nets et sans recadrage&nbsp;: parfait pour les démos en direct, en plein écran</li>
+					<li>Micro coupé, haut-parleur, caméra avant/arrière</li>
+					<li>En face, on voit un avatar, pas une image noire figée</li>
+					<li>Même chiffrement P2P, même qualité adaptative</li>
+				</ul>
+				<a class="go" href="../#videocall">Lancer un appel vidéo →</a>
+				<a class="go" href="../#audiocall" style="padding-top:8px">Lancer un appel audio →</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ USES ============ -->
+<section id="uses">
+	<div class="wrap">
+		<h2>Au départ, c’était une webcam. Les gens en ont trouvé de meilleurs usages.</h2>
+		<p class="lede">Un outil vaut ce qu’on en fait. Voici à quoi sert BeamCam, et comment bien configurer chaque usage.</p>
+
+		<div class="feature" style="margin-top:40px">
+			<div>
+				<span class="tag">Le plus utilisé</span>
+				<h3 style="font-size:1.7rem;letter-spacing:-0.03em">Babyphone, avec bouton pour parler</h3>
+				<p style="color:var(--muted);margin-top:10px">
+					Un vieux téléphone sur l’étagère, le vôtre dans la poche. Vous voyez le lit, vous entendez chaque soupir,
+					et vous pouvez <strong>maintenir le bouton et murmurer «&nbsp;chut&nbsp;»</strong> sans entrer dans la chambre.
+					Pas de matériel propriétaire, pas d’abonnement, et aucun serveur d’entreprise qui regarde votre enfant dormir.
+				</p>
+				<p style="color:var(--muted);margin-top:14px">
+					Ça marche depuis la pièce d’à côté comme depuis l’autre bout de la ville. Même maison, même Wi-Fi ou même réseau maillé&nbsp;:
+					la vidéo reste sur votre réseau local.
+				</p>
+				<div class="note">
+					<strong>Soyons clairs&nbsp;:</strong> BeamCam est un outil pratique, pas un dispositif de sécurité certifié.
+					Si le Wi-Fi décroche, si la batterie lâche ou si le navigateur est fermé, le flux s’arrête. Servez-vous-en pour
+					garder un œil, pas pour remplacer le vôtre.
+				</div>
+			</div>
+			<div class="steps-col">
+				<h3 style="margin-bottom:18px">Prêt en 2&nbsp;minutes</h3>
+				<ol class="steps">
+					<li><strong>Branchez le vieux téléphone sur un chargeur.</strong> Diffuser toute la nuit vide la batterie.</li>
+					<li>Ouvrez <code>beamcam.live</code>, touchez <strong>Faire de cet appareil une caméra</strong>, autorisez caméra + micro.</li>
+					<li>Calez-le face au lit. Choisissez le débit <strong>Auto</strong> et <strong>15&nbsp;i/s</strong>&nbsp;: c’est un bébé qui dort, pas un match de foot.</li>
+					<li>Sur votre téléphone, <strong>scannez le QR code</strong>. Touchez <strong>Activer le son</strong> pour entendre.</li>
+					<li>Maintenez <i data-lucide="radio" style="width:16px;height:16px;vertical-align:-3px"></i> pour parler. Relâchez pour écouter.</li>
+					<li>Laissez BeamCam ouvert, au premier plan, sur les deux téléphones. Le téléphone-caméra garde son écran allumé tout seul.</li>
+					<li>Chambre dans le noir&#8239;? Dans <strong>Image et qualité</strong>, montez la luminosité et poussez les niveaux de gris à 100&nbsp;%&nbsp;: les images de nuit sont plus propres et consomment moins de données.</li>
+				</ol>
+				<p style="color:var(--muted);font-size:0.9rem;margin-top:18px">Les caméras de téléphone ne voient pas l’infrarouge. Une petite veilleuse change déjà tout.</p>
+			</div>
+		</div>
+
+		<div class="grid c3">
+			<div class="card">
+				<div class="ico green"><i data-lucide="radio"></i></div>
+				<h3>Talkie-walkie</h3>
+				<p>Deux téléphones, l’image en direct, maintenir pour parler. Du jardin à la cuisine, de l’atelier à la maison, de l’étage au rez-de-chaussée.</p>
+				<ul><li>Maintenez le bouton, ou la barre d’espace sur un clavier</li><li>Annulation d’écho intégrée au navigateur</li></ul>
+			</div>
+			<div class="card">
+				<div class="ico"><i data-lucide="phone-call"></i></div>
+				<h3>Appeler mamie, sans appli</h3>
+				<p>Aucun compte à créer, aucune appli à installer pour quelqu’un qui ne s’en sortira jamais. Envoyez un lien, elle touche «&nbsp;Rejoindre en vidéo&nbsp;», c’est fait. Ça marche pareil sur sa vieille tablette.</p>
+			</div>
+			<div class="card">
+				<div class="ico amber"><i data-lucide="phone"></i></div>
+				<h3>Interphone</h3>
+				<p>Un appel audio entre l’atelier et la maison, le portail et la cuisine. Caméra coupée par défaut, allumez-la quand vous voulez voir qui est là.</p>
+			</div>
+			<div class="card">
+				<div class="ico green"><i data-lucide="video"></i></div>
+				<h3>Une vraie webcam</h3>
+				<p>La caméra arrière de votre téléphone surclasse n’importe quelle webcam d’ordinateur portable. Ouvrez la visionneuse sur votre ordinateur et capturez cette fenêtre dans OBS. Sa caméra virtuelle alimente ensuite Zoom, Meet ou Teams.</p>
+			</div>
+			<div class="card">
+				<div class="ico amber"><i data-lucide="presentation"></i></div>
+				<h3>Deuxième angle</h3>
+				<p>Vue plongeante sur vos mains, votre tableau blanc, votre fer à souder, le manche de votre guitare. Pour les cours, les streams et les tutos.</p>
+			</div>
+			<div class="card">
+				<div class="ico"><i data-lucide="paw-print"></i></div>
+				<h3>Animaux &amp; maison</h3>
+				<p>Le chien est encore sur le canapé&#8239;? Vérifiez depuis le bureau. Fonctionne d’un réseau à l’autre grâce à la traversée de NAT, pas seulement à la maison.</p>
+			</div>
+			<div class="card">
+				<div class="ico green"><i data-lucide="printer"></i></div>
+				<h3>Surveiller une tâche longue</h3>
+				<p>Imprimante 3D, four, four à céramique, un long rendu sur un autre écran. Pointez un téléphone dessus et allez faire autre chose.</p>
+			</div>
+			<div class="card">
+				<div class="ico amber"><i data-lucide="life-buoy"></i></div>
+				<h3>«&nbsp;Montre-moi ce qui ne marche pas&nbsp;»</h3>
+				<p>La box de vos parents, le code d’erreur du lave-linge. Envoyez-leur le lien et regardez à travers leur caméra au lieu de deviner au téléphone.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ HOW ============ -->
+<section id="how">
+	<div class="wrap">
+		<p class="kicker">comment ça marche</p>
+		<h2>Scannez un code, vous êtes en direct. Sans assistant de configuration.</h2>
+		<div class="how">
+			<div>
+				<div class="n">01</div>
+				<h3>Ouvrez-le sur le téléphone-caméra</h3>
+				<p>Touchez <em>Caméra téléphone</em>. Vous obtenez un code d’appairage aléatoire du type <code>cam-4k2x9q…</code> et un QR code. Rien à installer, aucune inscription.</p>
+			</div>
+			<div>
+				<div class="n">02</div>
+				<h3>Scannez depuis n’importe quel écran</h3>
+				<p>Le QR code ouvre la visionneuse et se connecte tout seul. Ou tapez le code sur un ordinateur. Les deux appareils échangent une brève poignée de main via beamcam.live.</p>
+			</div>
+			<div>
+				<div class="n">03</div>
+				<h3>La vidéo circule d’appareil à appareil</h3>
+				<p>Après cette poignée de main, WebRTC relie directement les deux appareils, avec un chiffrement de bout en bout. Le serveur n’a fait que les présenter l’un à l’autre.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ MANIFESTO ============ -->
+<section class="manifesto">
+	<div class="wrap">
+		<p class="kicker">ce que les autres applis de caméra passent sous silence</p>
+		<blockquote>
+			La plupart des caméras «&nbsp;intelligentes&nbsp;» envoient votre salon sur un serveur pour mieux vous le revendre.
+			BeamCam <em>ne peut pas</em> le faire, parce que la vidéo ne nous parvient jamais.
+		</blockquote>
+		<div class="facts">
+			<div><b>Pair-à-pair</b><span>Le flux va d’appareil à appareil. Même réseau&#8239;? Il ne quitte jamais le bâtiment.</span></div>
+			<div><b>Toujours chiffré</b><span>DTLS-SRTP, obligatoire dans WebRTC. Même le rare flux relayé reste illisible pour nous.</span></div>
+			<div><b>Zéro service tiers</b><span>Pas de CDN, pas de mesure d’audience, pas de pixel publicitaire, pas de Google Fonts. Chaque octet vient de beamcam.live.</span></div>
+			<div><b>Open source</b><span>Licence MIT. Lisez le code, auditez-le, hébergez votre propre instance. <a href="https://github.com/beamcam/beamcam">github.com/beamcam</a></span></div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section id="limits">
+	<div class="wrap">
+		<p class="kicker">limites actuelles</p>
+		<h2>Ce qu’il ne fait pas, noir sur blanc.</h2>
+		<p class="lede">Vous finirez par tomber dessus, alors autant les connaître tout de suite.</p>
+		<div class="limits">
+			<div><b>Pas un pilote de webcam virtuelle</b><span>Un navigateur ne peut pas en installer. Pour Zoom et compagnie, passez la visionneuse par la caméra virtuelle d’OBS.</span></div>
+			<div><b>Gardez-le au premier plan</b><span>Les systèmes mobiles coupent la caméra d’un onglet passé en arrière-plan. BeamCam garde l’écran allumé. Ne changez pas d’appli sur le téléphone-caméra.</span></div>
+			<div><b>Internet requis pour se connecter</b><span>La poignée de main passe par beamcam.live, même quand les deux appareils partagent le même Wi-Fi. Ensuite, le trafic local reste local.</span></div>
+			<div><b>Le code fait office de clé</b><span>Quiconque a le code d’appairage (ou le QR code) peut regarder. Il est long et aléatoire. Ne le publiez pas.</span></div>
+			<div><b>En tête-à-tête uniquement</b><span>Un spectateur par caméra, deux personnes par appel. Pas d’appels de groupe. Envie de plus d’angles&#8239;? Plus de téléphones, un code chacun.</span></div>
+			<div><b>Pas de vision nocturne</b><span>Les capteurs de téléphone ne voient pas l’infrarouge. Peu de lumière, beaucoup de grain. Ajoutez un peu de lumière.</span></div>
+		</div>
+	</div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq">
+	<div class="wrap">
+		<p class="kicker">faq</p>
+		<h2>Les questions qu’on nous pose vraiment.</h2>
+		<details>
+			<summary>Les deux appareils doivent-ils être sur le même Wi-Fi&#8239;?</summary>
+			<p>Non. BeamCam fonctionne d’un réseau à l’autre&nbsp;: de la 4G à la fibre de la maison, du bureau à la maison. Il utilise STUN pour trouver un chemin direct et se rabat sur un relais TURN quand des pare-feu stricts rendent ce chemin impossible. Sur le même Wi-Fi ou réseau maillé, la vidéo passe par votre réseau local et ne touche jamais Internet.</p>
+		</details>
+		<details>
+			<summary>La qualité s’adapte-t-elle à une mauvaise connexion&#8239;?</summary>
+			<p>Oui. En mode <strong>Auto</strong>, le téléphone-caméra mesure la bande passante disponible et la perte de paquets toutes les deux secondes, et garde trois minutes d’historique. Il retient un débit et une résolution que la liaison a réellement <em>tenus dans la durée</em>, pas seulement à son meilleur moment. Il baisse la qualité dès que la liaison se dégrade et remonte palier par palier une fois qu’elle est redevenue propre, pour que l’image ne fasse pas le yoyo.</p>
+		</details>
+		<details>
+			<summary>iPhone&#8239;? Android&#8239;? Quels navigateurs&#8239;?</summary>
+			<p>N’importe quelle version récente de Chrome, Safari, Firefox ou Edge, sur iOS, Android, macOS, Windows ou Linux. L’accès à la caméra exige le HTTPS, ce qui est le cas de beamcam.live. Le verrouillage de la mise au point et de l’exposition dépend du matériel et du navigateur, et n’apparaît que s’il est pris en charge.</p>
+		</details>
+		<details>
+			<summary>Puis-je l’utiliser comme webcam dans Zoom, Meet ou Teams&#8239;?</summary>
+			<p>Oui, avec une étape de plus. Une page web ne peut pas se déclarer comme caméra système. Ouvrez la visionneuse sur votre ordinateur, ajoutez-la comme <em>Capture de fenêtre</em> dans OBS Studio et cliquez sur <em>Démarrer la caméra virtuelle</em>. Sélectionnez ensuite «&nbsp;OBS Virtual Camera&nbsp;» dans votre appli de visio.</p>
+		</details>
+		<details>
+			<summary>Ma vidéo est-elle enregistrée quelque part&#8239;?</summary>
+			<p>Non. La vidéo en direct va d’appareil à appareil. L’Enregistreur local écrit dans la mémoire de votre appareil et vous remet un fichier. Rien n’est envoyé. Il n’y a pas de compte, donc rien à quoi rattacher un enregistrement, même si nous le voulions.</p>
+		</details>
+		<details>
+			<summary>Combien de batterie et de données consomme-t-il&#8239;?</summary>
+			<p>Diffuser, c’est caméra + encodeur + radio, en continu. Prévoyez de laisser le téléphone-caméra branché. En données mobiles, 1&nbsp;Mbit/s représente environ 450&nbsp;Mo par heure. Le mode Auto ou un plafond manuel à 500&nbsp;kbit/s limite la note.</p>
+		</details>
+		<details>
+			<summary>Puis-je l’héberger sur mon propre serveur&#8239;?</summary>
+			<p>Oui. C’est une page statique, un serveur de signalisation PeerJS et coturn. Les scripts sont dans le dépôt. Voir <a href="../technique.html#selfhost">Sous le capot → Auto-hébergement</a>.</p>
+		</details>
+	</div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final">
+	<div class="wrap">
+		<h2>Ressortez ce vieux téléphone du tiroir et mettez-le au travail.</h2>
+		<p class="lede">Dans dix secondes, il peut devenir une caméra.</p>
+		<div class="cta-row">
+			<a class="btn primary" href="../#camera"><i data-lucide="smartphone"></i> Faire de cet appareil une caméra</a>
+			<a class="btn" href="../#viewer"><i data-lucide="monitor"></i> Regarder une caméra</a>
+			<a class="btn" href="../#videocall"><i data-lucide="phone-call"></i> Lancer un appel</a>
+			<a class="btn" href="../#record"><i data-lucide="circle-dot"></i> Enregistrer en local</a>
+		</div>
+	</div>
+</section>
+
+<footer>
+	<div class="wrap">
+		<a class="brand" href="./" style="font-size:1rem">BeamCam</a>
+		<a href="../">Appli</a>
+		<a href="../technique.html">Sous le capot</a>
+		<a href="https://github.com/beamcam/beamcam">GitHub</a>
+		<a href="../about/" hreflang="en" lang="en">English</a>
+		<span class="sp">Licence MIT · © 2026 L3DLP</span>
+	</div>
+</footer>
+
+<script>
+	window.addEventListener("load", () => window.lucide && lucide.createIcons());
+</script>
+<script>
+	// The mode used last in the app (the app's home_pick cookie) gets the same halo as there
+	(function () {
+		var m = document.cookie.match(/(?:^|; )home_pick=(\w+)/);
+		var hash = m && { film: "camera", watch: "viewer", video: "videocall", audio: "audiocall", record: "record" }[m[1]];
+		var link = hash && document.querySelector('.mode-card a.go[href$="#' + hash + '"]');
+		if (!link) return;
+		var card = link.closest(".card"), note = document.createElement("span");
+		note.className = "pref-note";
+		note.setAttribute("aria-hidden", "true");
+		note.textContent = "comme d’hab’";
+		card.classList.add("is-pref");
+		card.appendChild(note);
+	})();
+</script>
+</body>
+</html>

@@ -18,6 +18,229 @@ const SIGNALING_URL = `${SIGNALING.secure ? "https" : "http"}://${SIGNALING.host
 const STUN_URL = CONFIG.stun || `stun:${SIGNALING.host}:3478`;
 const APPS = Object.assign({ live: true, videocall: true, audiocall: true, editor: true }, CONFIG.apps);
 
+// ==========================================
+// LANGUAGE: English by default, French when the browser asks for it.
+// Strings are written in English in the HTML and the code; t() looks them up.
+// translateDom() swaps text nodes and title/placeholder/aria-label in place,
+// remembering the English so the switch in the header can go back and forth.
+// ==========================================
+
+const FR = {
+	// home
+	"About": "À propos",
+	"Not connected": "Non connecté",
+	"or": "ou",
+	"Join": "Rejoindre",
+	"What do you need?": "De quoi avez-vous besoin\u202f?",
+	"Everything goes straight from one device to the other.": "Tout passe directement d'un appareil à l'autre.",
+	"Be the camera": "Faire la caméra",
+	"This device films. Another one watches.": "Cet appareil filme, un autre regarde.",
+	"baby monitor": "babyphone",
+	"Watch a camera": "Regarder une caméra",
+	"Scan its QR code, or type its code.": "Scannez son QR code, ou tapez son code.",
+	"from the couch": "depuis le canapé",
+	"Video call": "Appel vidéo",
+	"Face to face, just the two of you. Share your screen if needed.": "En face à face, à deux. Partage d'écran si besoin.",
+	"call mum": "appeler maman",
+	"Audio call": "Appel audio",
+	"Just voices. Light on any connection.": "Juste la voix. Léger, même sur une petite connexion.",
+	"intercom": "interphone",
+	"Record": "Enregistrer",
+	"Camera or screen to a file. Nothing is uploaded.": "La caméra ou l'écran dans un fichier. Rien n'est envoyé.",
+	"quick demo": "une démo vite fait",
+	"Join with a code": "Rejoindre avec un code",
+	"Paste a code or a link someone sent you.": "Collez le code ou le lien qu'on vous a envoyé.",
+	"your usual": "comme d'hab'",
+	// camera phone
+	"Scan to watch": "Scannez pour regarder",
+	"Open the camera app on another device": "Avec l'appareil photo d'un autre appareil",
+	"Hide": "Masquer",
+	"Pairing code": "Code d'appairage",
+	"Generating…": "Génération…",
+	"Copy link": "Copier le lien",
+	"Image & quality": "Image et qualité",
+	"Bitrate": "Débit",
+	"Auto (adaptive)": "Auto (adaptatif)",
+	"Frame rate": "Images par seconde",
+	"Brightness": "Luminosité",
+	"Contrast": "Contraste",
+	"Grayscale": "Niveaux de gris",
+	"Reset image": "Réinitialiser l'image",
+	"Show pairing code & settings": "Afficher le code et les réglages",
+	"Camera, screen or off": "Caméra, écran ou coupé",
+	"Toggle Microphone": "Activer ou couper le micro",
+	"Toggle Speaker (viewer's voice)": "Activer ou couper le haut-parleur (voix du spectateur)",
+	"Switch Camera": "Changer de caméra",
+	"Lock Focus": "Verrouiller la mise au point",
+	"Lock Exposure": "Verrouiller l'exposition",
+	"Stop": "Arrêter",
+	"Camera": "Caméra",
+	"Share screen": "Partager l'écran",
+	"Not available on this device": "Indisponible sur cet appareil",
+	"Turn video off": "Couper la vidéo",
+	"Sharing your screen": "Partage de votre écran",
+	"Warning: PeerJS server unreachable. Broadcaster may not work without connection.": "Attention : serveur de connexion injoignable, la caméra risque de ne pas fonctionner.",
+	"Camera not ready": "La caméra n'est pas encore prête",
+	"Ready (Waiting for viewer)": "Prête, en attente d'un spectateur",
+	"Connecting to Viewer...": "Connexion au spectateur…",
+	"Connected to Viewer": "Spectateur connecté",
+	"Viewer connected!": "Un spectateur est connecté !",
+	"Viewer disconnected": "Spectateur déconnecté",
+	"Connection error with viewer": "Erreur de connexion avec le spectateur",
+	"Error accessing camera. Please ensure permissions are granted.": "Impossible d'accéder à la caméra. Vérifiez les autorisations du navigateur.",
+	"Screen sharing failed": "Le partage d'écran a échoué",
+	"Camera unavailable": "Caméra indisponible",
+	"Image filters are not supported in this browser": "Ce navigateur ne gère pas les filtres d'image",
+	"Adaptive bitrate on": "Débit adaptatif activé",
+	"Failed to update framerate": "Impossible de changer le nombre d'images par seconde",
+	"Speaker off": "Haut-parleur coupé",
+	"Speaker on": "Haut-parleur activé",
+	"Focus lock not supported on this device": "Verrouillage de la mise au point indisponible sur cet appareil",
+	"Focus locked": "Mise au point verrouillée",
+	"Focus unlocked": "Mise au point déverrouillée",
+	"Failed to lock focus": "Impossible de verrouiller la mise au point",
+	"Exposure lock not supported on this device": "Verrouillage de l'exposition indisponible sur cet appareil",
+	"Exposure locked": "Exposition verrouillée",
+	"Exposure unlocked": "Exposition déverrouillée",
+	"Failed to lock exposure": "Impossible de verrouiller l'exposition",
+	"Link copied to clipboard!": "Lien copié !",
+	// viewer
+	"Connect to Camera": "Se connecter à une caméra",
+	"Enter the pairing code displayed on your phone, or a call code.": "Saisissez le code affiché sur le téléphone, ou un code d'appel.",
+	"Connect": "Connexion",
+	"Click unmute to hear audio": "Activez le son pour entendre",
+	"Unmute": "Activer le son",
+	"Unmute Audio": "Activer le son",
+	"Mute Audio": "Couper le son",
+	"Hold to talk (or hold Space)": "Maintenez pour parler (ou la barre d'espace)",
+	"Disconnected": "Non connecté",
+	"Cannot start viewer: PeerJS server unreachable": "Impossible de regarder : serveur de connexion injoignable",
+	"Initializing...": "Initialisation…",
+	"Ready (Enter code)": "Prêt, saisissez un code",
+	"Error - Try again": "Erreur, réessayez",
+	"Please enter a pairing code": "Saisissez un code",
+	"Invalid pairing code format": "Ce code n'est pas valide",
+	"Peer not ready, please wait...": "Pas encore prêt, patientez…",
+	"Connecting...": "Connexion…",
+	"Connection failed": "Échec de la connexion",
+	"Failed to initiate call": "Impossible d'établir la connexion",
+	"Connection timeout - check the pairing code": "Délai dépassé : vérifiez le code",
+	"Connected to Camera": "Connecté à la caméra",
+	"Connected successfully!": "Connecté !",
+	"Camera disconnected": "Caméra déconnectée",
+	"Microphone unavailable. Please grant permission.": "Micro indisponible. Autorisez-le dans le navigateur.",
+	"Requires internet connection to PeerJS server": "Nécessite une connexion au serveur",
+	"Viewer mode unavailable: PeerJS server unreachable": "Mode spectateur indisponible : serveur injoignable",
+	"Offline: Viewer mode disabled": "Hors ligne : mode spectateur désactivé",
+	"That doesn't look like a code. They start with cam- or call-": "Ce n'est pas un code. Ils commencent par cam- ou call-",
+	// recorder
+	"Recording...": "Enregistrement…",
+	"Local Recorder Setup": "Enregistreur",
+	"Error accessing media.": "Impossible d'accéder à la caméra ou à l'écran.",
+	"Download started!": "Téléchargement lancé !",
+	// calls
+	"Camera off": "Caméra coupée",
+	"Waiting for someone to join…": "En attente de votre correspondant…",
+	"Muted": "Micro coupé",
+	"Tap to enable sound": "Touchez pour activer le son",
+	"Scan or send the link to the other person": "Faites scanner le code ou envoyez le lien",
+	"Call code": "Code d'appel",
+	"Join the call": "Rejoindre l'appel",
+	"Join with video": "Rejoindre en vidéo",
+	"Camera and microphone": "Caméra et micro",
+	"Join audio only": "Rejoindre en audio seulement",
+	"Microphone, camera stays off": "Le micro, la caméra reste coupée",
+	"Microphone": "Micro",
+	"Speaker": "Haut-parleur",
+	"Fullscreen": "Plein écran",
+	"Hang up": "Raccrocher",
+	"In call": "En appel",
+	"Starting call…": "Démarrage de l'appel…",
+	"Waiting for the other person": "En attente de votre correspondant",
+	"Ready to join": "Prêt à rejoindre",
+	"Connecting…": "Connexion…",
+	"Call ended": "Appel terminé",
+	"Call failed": "L'appel a échoué",
+	"Connection lost": "Connexion perdue",
+	"The other person hung up": "Votre correspondant a raccroché",
+	"No answer: check the code, or the call has ended": "Pas de réponse : vérifiez le code, ou l'appel est terminé",
+	"That call doesn't exist (anymore)": "Cet appel n'existe pas (ou plus)",
+	"Microphone unavailable: you can listen but not talk": "Micro indisponible : vous pouvez écouter, pas parler",
+	"Camera unavailable: continuing with audio only": "Caméra indisponible : on continue en audio",
+	"Could not switch camera": "Impossible de changer de caméra",
+	"No microphone available": "Aucun micro disponible",
+	"Call link copied!": "Lien de l'appel copié !"
+};
+
+// Strings with a variable part
+const FR_PATTERNS = [
+	[/^(.*) · About$/, (m, status) => `${t(status)} · À propos`],
+	[/^Connection error: (.*)$/, "Erreur de connexion : $1"],
+	[/^Call error: (.*)$/, "Erreur d'appel : $1"],
+	[/^Bitrate updated to (.*)$/, "Débit réglé sur $1"],
+	[/^Framerate updated to (\d+) fps$/, "$1 images par seconde"]
+];
+
+function pickLang() {
+	try {
+		const saved = localStorage.getItem("lang");
+		if (saved === "en" || saved === "fr") return saved;
+	} catch (e) { /* storage blocked: follow the browser */ }
+	const langs = navigator.languages || [navigator.language || "en"];
+	return langs.some((l) => /^fr\b/i.test(l)) ? "fr" : "en";
+}
+let LANG = pickLang();
+
+function t(text) {
+	if (LANG !== "fr" || text == null) return text;
+	if (Object.prototype.hasOwnProperty.call(FR, text)) return FR[text];
+	for (const [re, out] of FR_PATTERNS) if (re.test(text)) return text.replace(re, out);
+	return text;
+}
+
+const I18N_ATTRS = ["title", "placeholder", "aria-label"];
+const englishText = new WeakMap(); // node -> its original English
+
+function translateDom(root = document.body) {
+	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+	for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+		if (node.parentElement.closest("script, style, code, select option[value]:not([value='auto'])")) continue;
+		if (!englishText.has(node)) englishText.set(node, node.nodeValue);
+		const en = englishText.get(node);
+		const key = en.trim();
+		if (key) node.nodeValue = en.replace(key, t(key));
+	}
+	root.querySelectorAll("[title], [placeholder], [aria-label]").forEach((el) => {
+		I18N_ATTRS.forEach((attr) => {
+			if (!el.hasAttribute(attr)) return;
+			const store = `en${attr.replace(/(^|-)(\w)/g, (m, d, c) => c.toUpperCase())}`;
+			if (!(store in el.dataset)) el.dataset[store] = el.getAttribute(attr);
+			el.setAttribute(attr, t(el.dataset[store]));
+		});
+	});
+	// The status light links to the about page in the reader's language
+	const about = document.getElementById("status-badge");
+	if (about && about.dataset.hrefFr) {
+		if (!about.dataset.hrefEn) about.dataset.hrefEn = about.getAttribute("href");
+		about.setAttribute("href", LANG === "fr" ? about.dataset.hrefFr : about.dataset.hrefEn);
+	}
+	document.documentElement.lang = LANG;
+	const sw = document.getElementById("lang-switch");
+	if (sw) {
+		sw.textContent = LANG === "fr" ? "EN" : "FR";
+		sw.title = LANG === "fr" ? "English" : "Français";
+		sw.setAttribute("lang", LANG === "fr" ? "en" : "fr");
+	}
+}
+
+function setLang(lang) {
+	LANG = lang;
+	try { localStorage.setItem("lang", lang); } catch (e) { /* not remembered, fine */ }
+	translateDom();
+	applyAppFlags(); // the code field's placeholder
+	markPick();      // its note
+}
+
 // State
 let peer = null;
 let localStream = null;
@@ -79,7 +302,7 @@ function showToast(message) {
 	const container = document.getElementById("toast-container");
 	const toast = document.createElement("div");
 	toast.className = "toast";
-	toast.textContent = message;
+	toast.textContent = t(message);
 	container.appendChild(toast);
 
 	setTimeout(() => {
@@ -101,6 +324,7 @@ function setIcon(btn, name) {
 function switchView(viewName) {
 	Object.values(views).forEach((v) => v.classList.remove("active"));
 	views[viewName].classList.add("active");
+	if (viewName === "selection") markPick();
 }
 
 // Generate a cryptographically secure random ID
@@ -111,9 +335,12 @@ function generatePeerId(prefix = "cam") {
 	return `${prefix}-${id}`;
 }
 
-// Update status UI
+// Update status UI: a light in the header, the text lives in its tooltip
 function updateStatus(status, isConnected = false) {
-	UI.statusBadge.textContent = status;
+	const en = (status === "Disconnected" ? "Not connected" : status) + " · About";
+	UI.statusBadge.dataset.enTitle = UI.statusBadge.dataset.enAriaLabel = en; // what translateDom() restores
+	UI.statusBadge.title = t(en);
+	UI.statusBadge.setAttribute("aria-label", t(en));
 	if (isConnected) {
 		UI.statusBadge.classList.add("connected");
 		UI.statusBadge.classList.remove("disconnected");
@@ -461,7 +688,7 @@ function openSourceMenu(anchor, current, onPick) {
 		b.disabled = !!it.disabled;
 		b.setAttribute("role", "menuitemradio");
 		b.setAttribute("aria-checked", it.kind === current);
-		b.innerHTML = `<i data-lucide="${it.icon}"></i><span>${it.label}${it.disabled ? `<small>${it.note}</small>` : ""}</span>` +
+		b.innerHTML = `<i data-lucide="${it.icon}"></i><span>${t(it.label)}${it.disabled ? `<small>${t(it.note)}</small>` : ""}</span>` +
 			(it.kind === current ? `<i data-lucide="check" class="source-check"></i>` : "");
 		b.addEventListener("click", () => {
 			closeSourceMenu();
@@ -1333,7 +1560,7 @@ function resetCallStage(waitingText) {
 	CallUI.remote.classList.remove("screen");
 	CallUI.muted.classList.add("hidden");
 	CallUI.sound.classList.add("hidden");
-	CallUI.waitingText.textContent = waitingText;
+	CallUI.waitingText.textContent = t(waitingText);
 	updateRemoteView();
 }
 
@@ -1410,7 +1637,7 @@ async function startCallHost(withVideo) {
 	callSession.facing = "user";
 	CallUI.lobby.classList.add("hidden");
 	CallUI.controls.classList.remove("hidden");
-	CallUI.cardTitle.textContent = withVideo ? "Video call" : "Audio call";
+	CallUI.cardTitle.textContent = t(withVideo ? "Video call" : "Audio call");
 	CallUI.card.classList.remove("hidden");
 	resetCallStage("Waiting for someone to join…");
 	updateStatus("Starting call…");
@@ -1588,6 +1815,238 @@ function toggleCallMic() {
 	refreshCallControls();
 	sendCallState();
 }
+
+// ==========================================
+// HOME: the block used last wears a living halo
+// ==========================================
+// A first-party cookie remembers which function was picked last (nothing
+// else, never sent anywhere but here). That block gets a note and a halo: a
+// small WebGL canvas behind it, drawing a glow that flows along the block's
+// edge (signed distance to a rounded box, modulated by noise along the
+// perimeter). No WebGL: a CSS glow. Reduced motion: one still frame.
+
+const PICK_COOKIE = "home_pick";
+const PICK_KEYS = ["film", "watch", "video", "audio", "record", "join"];
+
+function readPick() {
+	const m = document.cookie.match(new RegExp(`(?:^|; )${PICK_COOKIE}=(\\w+)`));
+	return m && PICK_KEYS.includes(m[1]) ? m[1] : null;
+}
+
+function savePick(key) {
+	const secure = location.protocol === "https:" ? "; Secure" : "";
+	document.cookie = `${PICK_COOKIE}=${key}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`;
+}
+
+function markPick() {
+	const key = readPick();
+	document.querySelectorAll(".blk.is-pref").forEach((el) => {
+		el.classList.remove("is-pref", "halo-css");
+		el.querySelector(".blk-note")?.remove();
+	});
+	const el = key && document.querySelector(`.blk[data-pick="${key}"]`);
+	if (!el || el.classList.contains("hidden") || el.disabled) return Halo.attach(null);
+	el.classList.add("is-pref");
+	const note = document.createElement("span");
+	note.className = "blk-note";
+	note.setAttribute("aria-hidden", "true");
+	note.innerHTML = `<span>${t("your usual")}</span>` +
+		'<svg viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+		'<path d="M3 3c8 1 15 6 17 15M14 14l6 5 3-7"/></svg>';
+	el.appendChild(note);
+	Halo.attach(el);
+}
+
+const Halo = (() => {
+	const PAD = 64; // CSS px of glow around the block
+	const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+	let canvas = null, gl = null, loc = null, target = null, raf = 0, failed = false;
+	let size = { w: 0, h: 0, dpr: 1, r: 20 };
+	const t0 = performance.now();
+
+	const VERT = "attribute vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }";
+	const FRAG = `
+		#ifdef GL_FRAGMENT_PRECISION_HIGH
+		precision highp float;
+		#else
+		precision mediump float;
+		#endif
+		uniform vec2 uHalf;     // block half size, device px
+		uniform vec2 uCenter;   // block center, device px
+		uniform float uR, uDpr, uT, uPad;
+		uniform vec3 uA, uB;
+
+		float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+		float noise(vec2 p) {
+			vec2 i = floor(p), f = fract(p);
+			f = f * f * (3.0 - 2.0 * f);
+			return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+			           mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+		}
+		float fbm(vec2 p) {
+			float v = 0.0, a = 0.5;
+			for (int i = 0; i < 4; i++) { v += a * noise(p); p = p * 2.03 + 17.1; a *= 0.5; }
+			return v;
+		}
+		float soft(vec2 p) { return 0.65 * noise(p) + 0.35 * noise(p * 2.03 + 17.1); } // no fine octaves: no streaks
+		float sdBox(vec2 p, vec2 b, float r) {
+			vec2 q = abs(p) - b + r;
+			return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+		}
+		void main() {
+			vec2 p = gl_FragCoord.xy - uCenter;
+			float d = sdBox(p, uHalf, uR) / uDpr;           // CSS px outside the edge
+			float ang = atan(p.y / uHalf.y, p.x / uHalf.x);   // even speed on long sides
+			// two noise fields travel around the edge in opposite directions,
+			// sampled on circles so the loop has no seam where the angle wraps
+			float a1 = ang + uT * 0.30, a2 = 2.0 * ang - uT * 0.45;
+			float n = soft(vec2(cos(a1), sin(a1)) * 1.1 + uT * 0.06);
+			float m = fbm(vec2(cos(a2), sin(a2)) * 2.4 + vec2(7.0, 3.0) + uT * 0.09);
+			float reach = 8.0 + 30.0 * n * n * 1.6;
+			float glow = exp(-max(d, 0.0) / reach) * (1.0 - smoothstep(uPad * 0.35, uPad, d)); // gone before the canvas edge
+			float rim = exp(-abs(d) / 1.4) * (0.25 + 0.75 * m);
+			float breathe = 0.86 + 0.14 * sin(uT * 1.25);
+			float hue = 0.5 + 0.5 * sin(ang + uT * 0.55 + n * 2.0); // colour drifts slowly round the block
+			vec3 col = mix(uA, uB, smoothstep(0.15, 0.85, hue));
+			float a = clamp(glow * 0.62 * breathe + rim * 0.85, 0.0, 1.0) * smoothstep(-3.0, 0.0, d);
+			gl_FragColor = vec4(col * a, a);
+		}`;
+
+	function init() {
+		canvas = document.createElement("canvas");
+		canvas.className = "halo";
+		canvas.setAttribute("aria-hidden", "true");
+		gl = canvas.getContext("webgl", { premultipliedAlpha: true, antialias: false, alpha: true });
+		if (!gl) return false;
+		const shader = (type, src) => {
+			const sh = gl.createShader(type);
+			gl.shaderSource(sh, src);
+			gl.compileShader(sh);
+			return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null;
+		};
+		const vs = shader(gl.VERTEX_SHADER, VERT), fs = shader(gl.FRAGMENT_SHADER, FRAG);
+		if (!vs || !fs) return false;
+		const prog = gl.createProgram();
+		gl.attachShader(prog, vs);
+		gl.attachShader(prog, fs);
+		gl.linkProgram(prog);
+		if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
+		gl.useProgram(prog);
+		const buf = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+		const p = gl.getAttribLocation(prog, "p");
+		gl.enableVertexAttribArray(p);
+		gl.vertexAttribPointer(p, 2, gl.FLOAT, false, 0, 0);
+		loc = {};
+		["uHalf", "uCenter", "uR", "uDpr", "uT", "uPad", "uA", "uB"].forEach((n) => (loc[n] = gl.getUniformLocation(prog, n)));
+		gl.uniform3f(loc.uA, 0.388, 0.4, 0.945);  // #6366f1
+		gl.uniform3f(loc.uB, 0.063, 0.725, 0.506); // #10b981
+		canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); stop(); });
+		return true;
+	}
+
+	// Follow the block: it moves while it animates in and on hover
+	function place() {
+		const grid = target.parentElement;
+		if (canvas.parentElement !== grid) grid.append(canvas); // last: keeps the blocks' :nth-child
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		const w = target.offsetWidth, h = target.offsetHeight;
+		const g = grid.getBoundingClientRect(), r = target.getBoundingClientRect();
+		canvas.style.left = `${r.left - g.left - PAD}px`;
+		canvas.style.top = `${r.top - g.top - PAD}px`;
+		if (w !== size.w || h !== size.h || dpr !== size.dpr) {
+			size = { w, h, dpr, r: parseFloat(getComputedStyle(target).borderTopLeftRadius) || 20 };
+			canvas.style.width = `${w + PAD * 2}px`;
+			canvas.style.height = `${h + PAD * 2}px`;
+			canvas.width = Math.round((w + PAD * 2) * dpr);
+			canvas.height = Math.round((h + PAD * 2) * dpr);
+			gl.viewport(0, 0, canvas.width, canvas.height);
+			gl.uniform2f(loc.uHalf, (w / 2) * dpr, (h / 2) * dpr);
+			gl.uniform2f(loc.uCenter, canvas.width / 2, canvas.height / 2);
+			gl.uniform1f(loc.uR, size.r * dpr);
+			gl.uniform1f(loc.uDpr, dpr);
+			gl.uniform1f(loc.uPad, PAD);
+		}
+	}
+
+	function draw(now) {
+		place();
+		gl.uniform1f(loc.uT, motion.matches ? 4.0 : (now - t0) / 1000);
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	}
+
+	function frame(now) {
+		raf = 0;
+		if (!target || !views.selection.classList.contains("active") || document.hidden) return;
+		draw(now);
+		if (!motion.matches) raf = requestAnimationFrame(frame);
+	}
+
+	function start() {
+		if (!raf) raf = requestAnimationFrame(frame);
+	}
+
+	function stop() {
+		cancelAnimationFrame(raf);
+		raf = 0;
+	}
+
+	document.addEventListener("visibilitychange", start);
+	window.addEventListener("resize", start); // a still frame (reduced motion) must follow too
+	motion.addEventListener("change", start);
+
+	return {
+		attach(el) {
+			target = el;
+			if (!el) {
+				stop();
+				if (canvas) canvas.classList.remove("on");
+				return;
+			}
+			if (!gl && !failed && !init()) failed = true;
+			if (failed) return el.classList.add("halo-css");
+			start();
+			requestAnimationFrame(() => canvas.classList.add("on"));
+		}
+	};
+})();
+
+// ==========================================
+// UPDATES
+// ==========================================
+// Every build has a number (bin/build.sh: config.js and version.json). iOS
+// keeps home-screen apps alive for days and caches without being told to, so
+// the app asks for version.json (never cached) when it starts and whenever it
+// comes back to the foreground. A newer build: reload, under a new URL so the
+// page itself can't come from the cache. Only from the home screen, never
+// in the middle of a call.
+
+const APP_VERSION = CONFIG.version || "";
+document.getElementById("app-version").textContent = APP_VERSION && `v${APP_VERSION}`;
+
+async function checkForUpdate() {
+	if (!APP_VERSION || !views.selection.classList.contains("active")) return;
+	try {
+		const res = await fetch("./version.json", { cache: "no-store" });
+		if (!res.ok) return;
+		const { version } = await res.json();
+		if (!version || version === APP_VERSION) return;
+		if (new URLSearchParams(location.search).get("v") === version) return; // tried already: don't loop
+		log.info("New build", version, "replacing", APP_VERSION);
+		location.replace(`${location.pathname}?v=${encodeURIComponent(version)}${location.hash}`);
+	} catch (err) {
+		log.debug("Update check failed:", err.message);
+	}
+}
+checkForUpdate();
+document.addEventListener("visibilitychange", () => {
+	if (!document.hidden) checkForUpdate();
+});
+
+document.querySelectorAll("button.blk[data-pick]").forEach((btn) =>
+	btn.addEventListener("click", () => savePick(btn.dataset.pick))
+);
 
 // ==========================================
 // EVENT LISTENERS
@@ -1795,7 +2254,7 @@ function toggleViewerAudio() {
 	video.muted = !video.muted;
 
 	setIcon(btn, video.muted ? "volume-x" : "volume-2");
-	btn.title = video.muted ? "Unmute Audio" : "Mute Audio";
+	btn.title = t(video.muted ? "Unmute Audio" : "Mute Audio");
 	btn.classList.toggle("active", !video.muted);
 	if (overlay) overlay.classList.toggle("hidden", !video.muted);
 }
@@ -1921,7 +2380,7 @@ async function checkPeerServerConnectivity() {
 		viewerBtn.disabled = true;
 		viewerBtn.style.opacity = "0.4";
 		viewerBtn.style.cursor = "not-allowed";
-		viewerBtn.title = "Requires internet connection to PeerJS server";
+		viewerBtn.title = t("Requires internet connection to PeerJS server");
 		showToast("Viewer mode unavailable: PeerJS server unreachable");
 	} else {
 		viewerBtn.disabled = false;
@@ -1954,20 +2413,36 @@ window.addEventListener('offline', () => {
 // APP_EDITOR): their tiles disappear and their links stop working.
 function applyAppFlags() {
 	const show = (id, on) => document.getElementById(id).classList.toggle("hidden", !on);
+	const calls = APPS.videocall || APPS.audiocall;
 	show("btn-broadcaster", APPS.live);
-	show("btn-viewer", APPS.live || APPS.videocall || APPS.audiocall); // also where call codes are typed
+	show("btn-viewer", APPS.live);
 	show("btn-call-video", APPS.videocall);
 	show("btn-call-audio", APPS.audiocall);
-	document.querySelector(".call-buttons").classList.toggle("hidden", !APPS.videocall && !APPS.audiocall);
 	show("btn-local", APPS.editor);
+	show("home-join", APPS.live || calls);
 	show("btn-join-video", APPS.videocall);
 	show("btn-join-audio", APPS.audiocall);
 	show("btn-call-cam", APPS.videocall); // audio-only deployments never send video
-	if (!APPS.live) {
-		document.querySelector("#btn-viewer strong").textContent = "Join a call";
-		document.querySelector("#btn-viewer .btn-text span").textContent = "Enter a call code";
-	}
+	document.getElementById("home-code").placeholder =
+		[APPS.live && "cam-…", calls && "call-…"].filter(Boolean).join(` ${t("or")} `);
 }
+
+// Home "Join with a code" block: takes a bare code or a whole shared link,
+// then goes where the link would have gone
+document.getElementById("home-join").addEventListener("submit", (e) => {
+	e.preventDefault();
+	const input = document.getElementById("home-code");
+	const m = input.value.match(/\b(cam|call)-[a-z0-9]{4,16}\b/i);
+	if (!m) {
+		showToast("That doesn't look like a code. They start with cam- or call-");
+		input.focus();
+		return;
+	}
+	input.value = "";
+	savePick("join");
+	history.replaceState(null, "", "#" + m[0].toLowerCase());
+	routeFromHash();
+});
 
 function routeFromHash() {
 	const hash = window.location.hash.substring(1);
@@ -1998,7 +2473,10 @@ function routeFromHash() {
 	}
 }
 
+translateDom();
 applyAppFlags();
+markPick();
+document.getElementById("lang-switch").addEventListener("click", () => setLang(LANG === "fr" ? "en" : "fr"));
 window.addEventListener("load", routeFromHash);
 
 // Service Worker: DISABLED. An earlier one intercepted the PeerJS signaling

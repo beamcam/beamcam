@@ -16,6 +16,10 @@ cam.example.org {
         }
     }
 
+    # Pages and version.json are always revalidated; assets carry ?v=<build>
+    @fresh path / *.html /version.json /manifest.json
+    header @fresh Cache-Control "no-cache"
+
     header {
         Permissions-Policy "camera=(self), microphone=(self), display-capture=(self), screen-wake-lock=(self)"
         Referrer-Policy "no-referrer"
